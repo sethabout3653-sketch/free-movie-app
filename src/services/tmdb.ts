@@ -155,16 +155,16 @@ export const STREAMING_PROVIDERS: StreamingProvider[] = [
 // Stream servers list
 export const STREAM_SERVERS: ServerOption[] = [
   {
-    id: 'zxcstream',
-    name: 'ZXCStream',
-    badge: 'Auto-Full',
+    id: 'vidplays',
+    name: 'VidPlays',
+    badge: 'Ultra HD',
     quality: '1080p HD',
     speed: 'Ultra Fast',
     supportsTv: true,
     getUrl: (id, type, s = 1, e = 1) =>
       type === 'movie'
-        ? `https://zxcstream.xyz/player/movie/${id}`
-        : `https://zxcstream.xyz/player/tv/${id}/${s}/${e}`,
+        ? `https://vidplays.com/e/movie/${id}`
+        : `https://vidplays.com/e/tv/${id}/${s}/${e}`,
   },
   {
     id: 'vidsrc',

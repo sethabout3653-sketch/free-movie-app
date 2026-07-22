@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Server, Maximize, Minimize, SkipForward, Tv, Film, Check, AlertCircle, Play, Pause, ChevronDown, Clock, RotateCcw } from 'lucide-react';
+import { X, Server, SkipForward, Tv, Film, Check, AlertCircle, Play, Pause, ChevronDown, Clock, RotateCcw } from 'lucide-react';
 import { MediaItem, MediaType, ServerOption } from '../types';
 import { STREAM_SERVERS, fetchTMDB } from '../services/tmdb';
 import { saveContinueWatchingItem, getContinueWatchingList } from '../services/storage';
@@ -256,11 +256,7 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 bg-black/95 backdrop-blur-xl flex flex-col justify-between animate-fade-in">
       {/* Top Navigation Bar */}
-      <div
-        className={`w-full px-4 sm:px-8 py-4 bg-gradient-to-b from-black via-black/80 to-transparent flex items-center justify-between z-30 transition-opacity duration-300 ${
-          isFullscreen && selectedServer.id === 'zxcstream' ? 'opacity-0 hover:opacity-100' : 'opacity-100'
-        }`}
-      >
+      <div className="w-full px-4 sm:px-8 py-4 bg-gradient-to-b from-black via-black/80 to-transparent flex items-center justify-between z-30">
         {/* Left Title & Season/Episode details */}
         <div className="flex items-center gap-3">
           <button
@@ -287,7 +283,7 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({
           </div>
         </div>
 
-        {/* Right Server Picker & Custom Fullscreen Controls */}
+        {/* Right Server Picker */}
         <div className="flex items-center gap-2 sm:gap-4">
           {/* Server Selector Dropdown */}
           <div className="relative">
@@ -336,65 +332,22 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({
               </div>
             )}
           </div>
-
-          {/* Dedicated Fullscreen Button for ZXCSTREAM (and support all) */}
-          {selectedServer.id === 'zxcstream' && (
-            <button
-              onClick={toggleFullScreen}
-              className={`flex items-center gap-1.5 bg-[#E50914] hover:bg-red-700 text-white px-3 py-1.5 rounded-lg text-xs sm:text-sm font-black shadow-xl transition-all transform hover:scale-105 ${
-                isFullscreen ? 'hidden' : 'block'
-              }`}
-              title="Click for Built-in Full Screen (ZXCStream)"
-            >
-              <Maximize className="w-4 h-4" />
-              <span>Full Screen</span>
-            </button>
-          )}
-
-          {/* Regular Fullscreen toggle for other servers */}
-          {selectedServer.id !== 'zxcstream' && (
-            <button
-              onClick={toggleFullScreen}
-              className="p-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-white transition-colors"
-              title="Toggle Fullscreen"
-            >
-              {isFullscreen ? <Minimize className="w-5 h-5" /> : <Maximize className="w-5 h-5" />}
-            </button>
-          )}
         </div>
       </div>
 
       {/* Video Player Frame Container */}
       <div ref={containerRef} className="relative flex-1 w-full bg-black flex items-center justify-center overflow-hidden">
-        {/* NO SANDBOX ATTRIBUTE AT ALL AS REQUESTED (DISABLE SANDBOX AT ANY COST) */}
         <iframe
           src={currentEmbedUrl}
           title={title}
           className="w-full h-full border-0 absolute inset-0"
-          allow="fullscreen; autoplay; encrypted-media; picture-in-picture; accelerometer; gyroscope"
+          allow="autoplay; encrypted-media; fullscreen; picture-in-picture; accelerometer; gyroscope; clipboard-write; web-share"
           allowFullScreen
         />
-
-        {/* Floating Fullscreen button inside container if ZXCSTREAM and not full yet */}
-        {selectedServer.id === 'zxcstream' && !isFullscreen && (
-          <button
-            onClick={toggleFullScreen}
-            className="absolute bottom-6 right-6 z-40 bg-[#E50914] text-white font-black text-xs px-4 py-2 rounded-full shadow-2xl flex items-center gap-2 hover:scale-110 transition-transform"
-          >
-            <Maximize className="w-4 h-4" />
-            Built-in Full Screen (ZXCStream)
-          </button>
-        )}
       </div>
 
-
-
       {/* Bottom TV Season / Episode Picker & Server Info Bar */}
-      <div
-        className={`w-full px-4 sm:px-8 py-3 bg-gradient-to-t from-black via-black/90 to-transparent flex flex-wrap items-center justify-between gap-3 z-30 border-t border-white/5 transition-opacity duration-300 ${
-          isFullscreen && selectedServer.id === 'zxcstream' ? 'opacity-0 hover:opacity-100' : 'opacity-100'
-        }`}
-      >
+      <div className="w-full px-4 sm:px-8 py-3 bg-gradient-to-t from-black via-black/90 to-transparent flex flex-wrap items-center justify-between gap-3 z-30 border-t border-white/5">
         <div className="flex items-center gap-3">
           {mediaType === 'tv' && (
             <>
