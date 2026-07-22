@@ -153,24 +153,6 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({
     };
   }, [item, mediaType, season, episode, title, progressPercentage, currentTime, duration, selectedServer.id]);
 
-  // Real-time watch heartbeat timer (increments seconds & recalculates percentage while watching)
-  useEffect(() => {
-    if (!isPlaying) return;
-
-    const interval = setInterval(() => {
-      setCurrentTime((prevTime) => {
-        const nextTime = prevTime + 1;
-        if (duration > 0) {
-          const calculatedPct = Math.min(100, Math.round((nextTime / duration) * 100));
-          setProgressPercentage(calculatedPct);
-        }
-        return nextTime;
-      });
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [isPlaying, duration]);
-
   // Comprehensive listener for iframe duration / time update events across all servers (VidSrc, VidEasy, ZXCStream, JWPlayer, etc.)
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
