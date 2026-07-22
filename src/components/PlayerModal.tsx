@@ -253,34 +253,6 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({
     }
   };
 
-  // Helper function to format seconds into MM:SS or HH:MM:SS
-  const formatTime = (seconds: number) => {
-    if (isNaN(seconds) || seconds <= 0) return '0:00';
-    const h = Math.floor(seconds / 3600);
-    const m = Math.floor((seconds % 3600) / 60);
-    const s = Math.floor(seconds % 60);
-    if (h > 0) {
-      return `${h}:${m < 10 ? '0' : ''}${m}:${s < 10 ? '0' : ''}${s}`;
-    }
-    return `${m}:${s < 10 ? '0' : ''}${s}`;
-  };
-
-  const handleSeekProgress = (newPct: number) => {
-    const clampedPct = Math.max(0, Math.min(100, newPct));
-    setProgressPercentage(clampedPct);
-    if (duration > 0) {
-      setCurrentTime(Math.round((clampedPct / 100) * duration));
-    }
-  };
-
-  const handleAdjustTime = (secondsToAdd: number) => {
-    const newTime = Math.max(0, Math.min(duration, currentTime + secondsToAdd));
-    setCurrentTime(newTime);
-    if (duration > 0) {
-      setProgressPercentage(Math.min(100, Math.round((newTime / duration) * 100)));
-    }
-  };
-
   return (
     <div className="fixed inset-0 z-50 bg-black/95 backdrop-blur-xl flex flex-col justify-between animate-fade-in">
       {/* Top Navigation Bar */}
@@ -415,79 +387,7 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({
         )}
       </div>
 
-      {/* Interactive Watch Progress & Sync Bar */}
-      <div
-        className={`w-full px-4 sm:px-8 py-2.5 bg-zinc-950/90 backdrop-blur-md flex flex-wrap items-center justify-between gap-3 z-30 border-t border-white/10 transition-opacity duration-300 ${
-          isFullscreen && selectedServer.id === 'zxcstream' ? 'opacity-0 hover:opacity-100' : 'opacity-100'
-        }`}
-      >
-        {/* Left: Play/Pause timer & time display */}
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => setIsPlaying(!isPlaying)}
-            className="p-1.5 rounded-full bg-zinc-800 hover:bg-[#E50914] text-white transition-colors"
-            title={isPlaying ? 'Pause Timer Tracking' : 'Resume Timer Tracking'}
-          >
-            {isPlaying ? <Pause className="w-4 h-4 fill-white" /> : <Play className="w-4 h-4 fill-white ml-0.5" />}
-          </button>
 
-          <div className="flex items-center gap-2 text-xs font-mono font-bold text-gray-200">
-            <Clock className="w-3.5 h-3.5 text-[#E50914]" />
-            <span>{formatTime(currentTime)}</span>
-            <span className="text-gray-500">/</span>
-            <span className="text-gray-400">{formatTime(duration)}</span>
-          </div>
-
-          <span className="text-xs font-black text-red-400 bg-red-950/80 px-2 py-0.5 rounded border border-red-800/40">
-            {progressPercentage}% Watched
-          </span>
-        </div>
-
-        {/* Center: Interactive Scrubber Slider */}
-        <div className="flex-1 max-w-xl mx-2 flex items-center gap-3">
-          <input
-            type="range"
-            min="0"
-            max="100"
-            value={progressPercentage}
-            onChange={(e) => handleSeekProgress(Number(e.target.value))}
-            className="w-full h-2 bg-zinc-800 accent-[#E50914] rounded-lg cursor-pointer transition-all"
-            title="Drag slider to set where you paused on any server"
-          />
-        </div>
-
-        {/* Right: Quick position adjusters (-5m, +5m) */}
-        <div className="flex items-center gap-1.5">
-          <button
-            onClick={() => handleAdjustTime(-300)}
-            className="px-2 py-1 bg-zinc-900 border border-zinc-700 hover:border-red-600 text-gray-300 hover:text-white rounded text-[11px] font-bold transition-all"
-            title="Rewind 5 minutes"
-          >
-            -5m
-          </button>
-          <button
-            onClick={() => handleAdjustTime(-60)}
-            className="px-2 py-1 bg-zinc-900 border border-zinc-700 hover:border-red-600 text-gray-300 hover:text-white rounded text-[11px] font-bold transition-all"
-            title="Rewind 1 minute"
-          >
-            -1m
-          </button>
-          <button
-            onClick={() => handleAdjustTime(60)}
-            className="px-2 py-1 bg-zinc-900 border border-zinc-700 hover:border-red-600 text-gray-300 hover:text-white rounded text-[11px] font-bold transition-all"
-            title="Forward 1 minute"
-          >
-            +1m
-          </button>
-          <button
-            onClick={() => handleAdjustTime(300)}
-            className="px-2 py-1 bg-zinc-900 border border-zinc-700 hover:border-red-600 text-gray-300 hover:text-white rounded text-[11px] font-bold transition-all"
-            title="Forward 5 minutes"
-          >
-            +5m
-          </button>
-        </div>
-      </div>
 
       {/* Bottom TV Season / Episode Picker & Server Info Bar */}
       <div
