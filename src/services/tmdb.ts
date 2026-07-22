@@ -167,6 +167,18 @@ export const STREAM_SERVERS: ServerOption[] = [
         : `https://multiembed.mov/?video_id=${id}&tmdb=1&s=${s}&e=${e}`,
   },
   {
+    id: 'vidlink',
+    name: 'VidLink',
+    badge: 'Fast & Ad-Free',
+    quality: '1080p / 4K',
+    speed: 'Ultra Fast',
+    supportsTv: true,
+    getUrl: (id, type, s = 1, e = 1) =>
+      type === 'movie'
+        ? `https://vidlink.pro/movie/${id}`
+        : `https://vidlink.pro/tv/${id}/${s}/${e}`,
+  },
+  {
     id: 'zxcstream',
     name: 'ZXCStream',
     badge: 'Auto-Full',
