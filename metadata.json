@@ -1,0 +1,6 @@
+{
+  "name": "FreeNetflix",
+  "description": "Free movies and TV shows streaming web application featuring Netflix UI, custom server choices, provider filters, and continue watching progress.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
