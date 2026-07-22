@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Play, Star, Trash2, Check, Info } from 'lucide-react';
+import { Play, Star, Trash2, X, Info } from 'lucide-react';
 import { MediaItem, ContinueWatchingItem, MediaType } from '../types';
 import { getCertification } from '../services/tmdb';
 
@@ -20,7 +20,6 @@ export const MovieCard: React.FC<MovieCardProps> = ({
   onPlay,
   onMoreInfo,
   onDeleteContinueWatching,
-  onToggleComplete,
 }) => {
   const [certification, setCertification] = useState<string>(item.certification || '');
 
@@ -58,12 +57,28 @@ export const MovieCard: React.FC<MovieCardProps> = ({
             {certification || (mediaType === 'movie' ? 'PG-13' : 'TV-MA')}
           </span>
 
-          {/* TMDB Vote Average Score */}
-          <span className="bg-black/85 backdrop-blur-md text-yellow-400 border border-yellow-500/30 text-[10px] sm:text-xs font-bold px-1.5 py-0.5 rounded shadow-lg flex items-center gap-1">
-            <Star className="w-3 h-3 fill-yellow-400 stroke-none" />
-            {ratingNumber}
-          </span>
+          {/* TMDB Vote Average Score (hidden when edit mode delete button is present) */}
+          {(!continueWatchingItem || !isEditMode) && (
+            <span className="bg-black/85 backdrop-blur-md text-yellow-400 border border-yellow-500/30 text-[10px] sm:text-xs font-bold px-1.5 py-0.5 rounded shadow-lg flex items-center gap-1">
+              <Star className="w-3 h-3 fill-yellow-400 stroke-none" />
+              {ratingNumber}
+            </span>
+          )}
         </div>
+
+        {/* Delete button in Edit Mode on Top Right for Continue Watching */}
+        {continueWatchingItem && isEditMode && onDeleteContinueWatching && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onDeleteContinueWatching(continueWatchingItem.id);
+            }}
+            className="absolute top-2 right-2 bg-red-600 hover:bg-red-700 text-white p-1.5 rounded-full shadow-2xl z-30 transition-transform transform hover:scale-110"
+            title="Delete from Continue Watching"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        )}
 
         {/* Play Button Overlay on Hover */}
         <div
@@ -79,31 +94,10 @@ export const MovieCard: React.FC<MovieCardProps> = ({
         {continueWatchingItem && (
           <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-zinc-800 z-10">
             <div
-              className={`h-full transition-all duration-300 ${continueWatchingItem.completed ? 'bg-green-500' : 'bg-[#E50914]'}`}
+              className="h-full transition-all duration-300 bg-[#E50914]"
               style={{ width: `${continueWatchingItem.progressPercentage}%` }}
             />
           </div>
-        )}
-
-        {/* Completed Check Badge */}
-        {continueWatchingItem?.completed && (
-          <div className="absolute top-10 right-2 bg-green-600 text-white p-1 rounded-full shadow-lg z-10">
-            <Check className="w-3.5 h-3.5" />
-          </div>
-        )}
-
-        {/* Delete button in Edit Mode for Continue Watching */}
-        {continueWatchingItem && isEditMode && onDeleteContinueWatching && (
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onDeleteContinueWatching(continueWatchingItem.id);
-            }}
-            className="absolute top-10 left-2 bg-red-600 hover:bg-red-700 text-white p-2 rounded-full shadow-xl z-30 transition-transform transform hover:scale-110"
-            title="Delete from Continue Watching"
-          >
-            <Trash2 className="w-4 h-4" />
-          </button>
         )}
       </div>
 
@@ -143,24 +137,6 @@ export const MovieCard: React.FC<MovieCardProps> = ({
               </span>
             )}
           </div>
-
-          {continueWatchingItem && onToggleComplete && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onToggleComplete(continueWatchingItem.id);
-              }}
-              className={`flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold border transition-colors ${
-                continueWatchingItem.completed
-                  ? 'bg-green-950/60 border-green-600 text-green-400'
-                  : 'bg-zinc-800 border-zinc-700 hover:border-zinc-500 text-gray-300'
-              }`}
-              title={continueWatchingItem.completed ? 'Mark Unfinished' : 'Mark Completed'}
-            >
-              <Check className="w-3 h-3" />
-              {continueWatchingItem.completed ? 'Finished' : 'Check'}
-            </button>
-          )}
         </div>
       </div>
     </div>
