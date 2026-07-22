@@ -23,6 +23,14 @@ export const DetailModal: React.FC<DetailModalProps> = ({ item, onClose, onPlay 
     : `https://image.tmdb.org/t/p/original${item.poster_path}`;
 
   useEffect(() => {
+    const mediaTitle = item.title || item.name || 'Untitled';
+    document.title = `${mediaTitle} - FreeNetflix`;
+    return () => {
+      document.title = 'FreeNetflix - Stream Movies & TV Shows';
+    };
+  }, [item]);
+
+  useEffect(() => {
     getCertification(item.id, mediaType).then(setCertification);
 
     // Fetch details & credits

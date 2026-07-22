@@ -50,6 +50,19 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({
     }
   }, [item.id, mediaType, season]);
 
+  // Update document title when watching
+  useEffect(() => {
+    const mediaTitle = item.title || item.name || 'Title';
+    if (mediaType === 'tv') {
+      document.title = `Watching ${mediaTitle} (S${season}:E${episode}) - FreeNetflix`;
+    } else {
+      document.title = `Watching ${mediaTitle} - FreeNetflix`;
+    }
+    return () => {
+      document.title = 'FreeNetflix - Stream Movies & TV Shows';
+    };
+  }, [item, mediaType, season, episode]);
+
   // Save progress in local storage when opening or changing episode
   useEffect(() => {
     const uniqueId = mediaType === 'tv' ? `tv-${item.id}` : `movie-${item.id}`;
