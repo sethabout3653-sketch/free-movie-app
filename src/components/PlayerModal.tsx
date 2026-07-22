@@ -28,10 +28,10 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({
   const [showServerMenu, setShowServerMenu] = useState<boolean>(false);
 
   // Watch Progress & Duration tracking state
-  const [progressPercentage, setProgressPercentage] = useState<number>(5);
+  const [progressPercentage, setProgressPercentage] = useState<number>(0);
   const [currentTime, setCurrentTime] = useState<number>(0); // in seconds
   const [duration, setDuration] = useState<number>(item.title ? 7200 : 2700); // 2 hrs for movie, 45 mins for TV default
-  const [isPlaying, setIsPlaying] = useState<boolean>(true);
+  const [isPlaying, setIsPlaying] = useState<boolean>(false); // Starts paused until video loads/plays
 
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -102,7 +102,7 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({
         setDuration(existing.duration);
       }
     } else {
-      setProgressPercentage(5);
+      setProgressPercentage(0);
       setCurrentTime(0);
     }
   }, [item.id, mediaType, season, episode]);
@@ -179,6 +179,14 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({
         const data = typeof raw === 'string' ? JSON.parse(raw) : raw;
         if (!data || typeof data !== 'object') return;
 
+        // Check for player state events (play/pause/playing/ended)
+        const eventType = (data.event || data.type || data.status || '').toString().toLowerCase();
+        if (eventType.includes('play') || eventType.includes('start')) {
+          setIsPlaying(true);
+        } else if (eventType.includes('pause') || eventType.includes('stop') || eventType.includes('end')) {
+          setIsPlaying(false);
+        }
+
         // Extract nested payload if present
         const payload = data.data || data.payload || data;
 
@@ -192,12 +200,14 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({
           setCurrentTime(Math.round(cur));
           setDuration(Math.round(dur));
           setProgressPercentage(calculatedPct);
+          setIsPlaying(true); // Active time update received from player
         } else if (typeof pct === 'number' && pct > 0) {
           const normalizedPct = Math.min(100, Math.max(0, Math.round(pct <= 1 ? pct * 100 : pct)));
           setProgressPercentage(normalizedPct);
           if (duration > 0) {
             setCurrentTime(Math.round((normalizedPct / 100) * duration));
           }
+          setIsPlaying(true);
         }
       } catch {}
     };
