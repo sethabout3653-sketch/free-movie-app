@@ -120,6 +120,39 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({
     };
   }, [item, mediaType, season, episode]);
 
+  // Handle tab close / refresh / page cut / unmount ("if you cut make it listen to that")
+  useEffect(() => {
+    const handleSaveState = () => {
+      const uniqueId = mediaType === 'tv' ? `tv-${item.id}` : `movie-${item.id}`;
+      saveContinueWatchingItem({
+        id: uniqueId,
+        tmdbId: item.id,
+        mediaType,
+        title,
+        posterPath: item.poster_path,
+        backdropPath: item.backdrop_path,
+        progressPercentage,
+        currentTime,
+        duration,
+        season: mediaType === 'tv' ? season : undefined,
+        episode: mediaType === 'tv' ? episode : undefined,
+        certification: item.certification,
+        voteAverage: item.vote_average,
+        completed: progressPercentage >= 95,
+        serverId: selectedServer.id,
+      });
+    };
+
+    window.addEventListener('beforeunload', handleSaveState);
+    window.addEventListener('pagehide', handleSaveState);
+
+    return () => {
+      handleSaveState(); // Save state on component unmount / modal close
+      window.removeEventListener('beforeunload', handleSaveState);
+      window.removeEventListener('pagehide', handleSaveState);
+    };
+  }, [item, mediaType, season, episode, title, progressPercentage, currentTime, duration, selectedServer.id]);
+
   // Real-time watch heartbeat timer (increments seconds & recalculates percentage while watching)
   useEffect(() => {
     if (!isPlaying) return;
@@ -138,20 +171,32 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({
     return () => clearInterval(interval);
   }, [isPlaying, duration]);
 
-  // Listen to iframe postMessage events (for players like VidSrc / VidEasy / HTML5 embeds)
+  // Comprehensive listener for iframe duration / time update events across all servers (VidSrc, VidEasy, ZXCStream, JWPlayer, etc.)
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
       try {
-        const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
-        if (data && typeof data === 'object') {
-          if (typeof data.currentTime === 'number' && typeof data.duration === 'number' && data.duration > 0) {
-            const pct = Math.min(100, Math.round((data.currentTime / data.duration) * 100));
-            setCurrentTime(Math.round(data.currentTime));
-            setDuration(Math.round(data.duration));
-            setProgressPercentage(pct);
-          } else if (typeof data.progress === 'number') {
-            const pct = Math.min(100, Math.round(data.progress <= 1 ? data.progress * 100 : data.progress));
-            setProgressPercentage(pct);
+        const raw = event.data;
+        const data = typeof raw === 'string' ? JSON.parse(raw) : raw;
+        if (!data || typeof data !== 'object') return;
+
+        // Extract nested payload if present
+        const payload = data.data || data.payload || data;
+
+        // Parse current time, duration or progress percentage from standard player formats
+        const cur = payload.currentTime ?? payload.time ?? payload.seconds ?? payload.position ?? payload.secondsWatched;
+        const dur = payload.duration ?? payload.totalDuration ?? payload.length;
+        const pct = payload.progress ?? payload.percentage ?? payload.percent;
+
+        if (typeof cur === 'number' && typeof dur === 'number' && dur > 0) {
+          const calculatedPct = Math.min(100, Math.max(0, Math.round((cur / dur) * 100)));
+          setCurrentTime(Math.round(cur));
+          setDuration(Math.round(dur));
+          setProgressPercentage(calculatedPct);
+        } else if (typeof pct === 'number' && pct > 0) {
+          const normalizedPct = Math.min(100, Math.max(0, Math.round(pct <= 1 ? pct * 100 : pct)));
+          setProgressPercentage(normalizedPct);
+          if (duration > 0) {
+            setCurrentTime(Math.round((normalizedPct / 100) * duration));
           }
         }
       } catch {}
@@ -159,7 +204,7 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({
 
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
-  }, []);
+  }, [duration]);
 
   // Save updated progress to local storage and notify parent component
   useEffect(() => {
