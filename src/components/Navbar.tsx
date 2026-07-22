@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Bell, Film, Tv, X } from 'lucide-react';
+import { Search, X } from 'lucide-react';
 
 interface NavbarProps {
   onSearch: (query: string) => void;
@@ -43,118 +43,97 @@ export const Navbar: React.FC<NavbarProps> = ({
   return (
     <nav
       className={`fixed top-0 left-0 right-0 z-50 transition-colors duration-500 ${
-        isScrolled ? 'bg-[#141414]/95 backdrop-blur-md shadow-2xl border-b border-white/5' : 'bg-gradient-to-b from-black/90 via-black/50 to-transparent'
+        isScrolled ? 'bg-black/95 backdrop-blur-md shadow-2xl border-b border-white/5' : 'bg-gradient-to-b from-black/90 via-black/50 to-transparent'
       }`}
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between">
-        {/* Left section: Logo & Nav Links */}
-        <div className="flex items-center gap-6 sm:gap-10">
+      <div className="max-w-[1440px] mx-auto px-4 sm:px-8 h-16 sm:h-20 flex items-center justify-between">
+        {/* Navigation Row */}
+        <div className="flex items-center gap-6 sm:gap-8 w-full justify-between">
+          {/* Brand Logo */}
           <button
             onClick={() => {
               setActiveCategory('home');
               clearSearch();
             }}
-            className="flex items-center gap-1 group text-left focus:outline-none"
+            className="flex items-center gap-2 group focus:outline-none"
           >
-            <span className="font-netflix text-3xl sm:text-4xl tracking-wider text-[#E50914] drop-shadow-[0_2px_10px_rgba(229,9,20,0.5)] transform group-hover:scale-105 transition-transform duration-200">
+            <span className="font-black text-2xl sm:text-3xl text-[#E50914] tracking-widest uppercase transform group-hover:scale-105 transition-transform duration-200 drop-shadow-[0_2px_10px_rgba(229,9,20,0.5)]">
               FREEFLIX
             </span>
           </button>
 
-          {/* Nav Categories */}
-          <div className="hidden md:flex items-center gap-6 text-sm font-medium">
+          {/* Center Navigation Tabs with Pill Styling (matching image) */}
+          <div className="flex items-center justify-center gap-2 sm:gap-4 text-sm font-medium">
+            {/* Search Toggle */}
+            <div className={`relative flex items-center transition-all duration-300 ${searchOpen ? 'w-48 sm:w-64 bg-black/90 border border-white/30 rounded-full px-3 py-1.5 shadow-lg' : 'w-auto'}`}>
+              <button
+                onClick={() => setSearchOpen(!searchOpen)}
+                className="text-gray-200 hover:text-white transition-colors focus:outline-none p-1.5 hover:bg-white/10 rounded-full flex items-center gap-1.5"
+                aria-label="Search"
+              >
+                <Search className="w-5 h-5" />
+              </button>
+              {searchOpen && (
+                <>
+                  <input
+                    type="text"
+                    placeholder="Search movies & shows..."
+                    value={searchQuery}
+                    onChange={handleSearchChange}
+                    autoFocus
+                    className="bg-transparent text-white text-xs sm:text-sm pl-2 pr-6 w-full focus:outline-none placeholder-gray-400"
+                  />
+                  {searchQuery && (
+                    <button onClick={clearSearch} className="absolute right-2 text-gray-400 hover:text-white">
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
+                </>
+              )}
+            </div>
+
+            {/* Nav Items */}
             <button
               onClick={() => { setActiveCategory('home'); clearSearch(); }}
-              className={`transition-colors duration-200 ${activeCategory === 'home' ? 'text-white font-bold' : 'text-gray-300 hover:text-gray-100'}`}
+              className={`px-3 sm:px-4 py-1.5 rounded-full text-xs sm:text-sm transition-all duration-200 ${
+                activeCategory === 'home'
+                  ? 'bg-zinc-800 text-white font-bold border border-white/20'
+                  : 'text-zinc-300 hover:text-white hover:bg-white/10'
+              }`}
             >
               Home
             </button>
+
             <button
               onClick={() => { setActiveCategory('tv'); clearSearch(); }}
-              className={`flex items-center gap-1.5 transition-colors duration-200 ${activeCategory === 'tv' ? 'text-white font-bold' : 'text-gray-300 hover:text-gray-100'}`}
+              className={`px-3 sm:px-4 py-1.5 rounded-full text-xs sm:text-sm transition-all duration-200 ${
+                activeCategory === 'tv'
+                  ? 'bg-zinc-800 text-white font-bold border border-white/20'
+                  : 'text-zinc-300 hover:text-white hover:bg-white/10'
+              }`}
             >
-              <Tv className="w-4 h-4 text-[#E50914]" />
-              TV Shows
+              Shows
             </button>
+
             <button
               onClick={() => { setActiveCategory('movie'); clearSearch(); }}
-              className={`flex items-center gap-1.5 transition-colors duration-200 ${activeCategory === 'movie' ? 'text-white font-bold' : 'text-gray-300 hover:text-gray-100'}`}
+              className={`px-3 sm:px-4 py-1.5 rounded-full text-xs sm:text-sm transition-all duration-200 ${
+                activeCategory === 'movie'
+                  ? 'bg-zinc-800 text-white font-bold border border-white/20'
+                  : 'text-zinc-300 hover:text-white hover:bg-white/10'
+              }`}
             >
-              <Film className="w-4 h-4 text-[#E50914]" />
               Movies
             </button>
-            <button
-              onClick={() => { setActiveCategory('trending'); clearSearch(); }}
-              className={`transition-colors duration-200 ${activeCategory === 'trending' ? 'text-white font-bold' : 'text-gray-300 hover:text-gray-100'}`}
-            >
-              New & Popular
-            </button>
-          </div>
-        </div>
-
-        {/* Right section: Search */}
-        <div className="flex items-center gap-3 sm:gap-4">
-          {/* Search box */}
-          <div className={`relative flex items-center transition-all duration-300 ${searchOpen ? 'w-48 sm:w-72 bg-black/80 border border-white/30 rounded-full px-3 py-1.5 shadow-lg' : 'w-9'}`}>
-            <button
-              onClick={() => setSearchOpen(!searchOpen)}
-              className="text-gray-300 hover:text-white transition-colors focus:outline-none p-1.5 hover:bg-white/10 rounded-full"
-              aria-label="Search"
-            >
-              <Search className="w-5 h-5" />
-            </button>
-            {searchOpen && (
-              <>
-                <input
-                  type="text"
-                  placeholder="Titles, people, genres..."
-                  value={searchQuery}
-                  onChange={handleSearchChange}
-                  autoFocus
-                  className="bg-transparent text-white text-xs sm:text-sm pl-2.5 pr-6 w-full focus:outline-none placeholder-gray-400"
-                />
-                {searchQuery && (
-                  <button onClick={clearSearch} className="absolute right-2 text-gray-400 hover:text-white">
-                    <X className="w-4 h-4" />
-                  </button>
-                )}
-              </>
-            )}
           </div>
 
-          <button className="text-gray-300 hover:text-white transition-colors p-2 hover:bg-white/10 rounded-full relative hidden sm:block">
-            <Bell className="w-5 h-5" />
-            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#E50914] rounded-full ring-2 ring-black animate-pulse"></span>
-          </button>
+          {/* Top Right Red Brand Logo 'N' (Matching image top-right N) */}
+          <div className="flex items-center">
+            <span className="text-[#E50914] font-black text-2xl sm:text-3xl tracking-tighter select-none drop-shadow-md">
+              N
+            </span>
+          </div>
         </div>
-      </div>
-
-      {/* Mobile Category Navigation Strip */}
-      <div className="md:hidden flex items-center justify-around bg-black/90 border-t border-white/10 px-2 py-2 text-xs font-medium text-gray-300">
-        <button
-          onClick={() => { setActiveCategory('home'); clearSearch(); }}
-          className={activeCategory === 'home' ? 'text-[#E50914] font-bold' : ''}
-        >
-          Home
-        </button>
-        <button
-          onClick={() => { setActiveCategory('tv'); clearSearch(); }}
-          className={activeCategory === 'tv' ? 'text-[#E50914] font-bold' : ''}
-        >
-          TV Shows
-        </button>
-        <button
-          onClick={() => { setActiveCategory('movie'); clearSearch(); }}
-          className={activeCategory === 'movie' ? 'text-[#E50914] font-bold' : ''}
-        >
-          Movies
-        </button>
-        <button
-          onClick={() => { setActiveCategory('trending'); clearSearch(); }}
-          className={activeCategory === 'trending' ? 'text-[#E50914] font-bold' : ''}
-        >
-          New & Popular
-        </button>
       </div>
     </nav>
   );

@@ -11,6 +11,7 @@ import {
 
 import { Navbar } from './components/Navbar';
 import { HeroBanner } from './components/HeroBanner';
+import { MyListSpotlight } from './components/MyListSpotlight';
 import { StreamingProvidersBar } from './components/StreamingProvidersBar';
 import { GenreNavigationBar, GenreOption } from './components/GenreNavigationBar';
 import { MediaRow } from './components/MediaRow';
@@ -255,11 +256,22 @@ export default function App() {
           </div>
         ) : (
           <>
-            {/* Hero Featured Banner */}
-            <HeroBanner
-              item={heroItem}
+            {/* Spotlight Featured Section matching image */}
+            {activeCategory === 'home' && trending.length > 0 && (
+              <MyListSpotlight
+                items={trending}
+                onPlay={handlePlayMedia}
+                onMoreInfo={handleMoreInfo}
+              />
+            )}
+
+            {/* CONTINUE WATCHING ROW DIRECTLY BELOW MY LIST */}
+            <ContinueWatchingRow
+              items={continueWatching}
               onPlay={handlePlayMedia}
-              onMoreInfo={handleMoreInfo}
+              onDeleteItem={handleDeleteContinueWatching}
+              onToggleComplete={handleToggleComplete}
+              onClearAll={handleClearAllContinueWatching}
             />
 
             {/* STREAMING PROVIDERS FILTER BAR IN MIDDLE OF HOME SCREEN */}
@@ -318,15 +330,6 @@ export default function App() {
             {/* CATEGORY & GENRE ROWS */}
             {activeCategory === 'home' && (
               <>
-                {/* CONTINUE WATCHING ROW IN HOME TAB */}
-                <ContinueWatchingRow
-                  items={continueWatching}
-                  onPlay={handlePlayMedia}
-                  onDeleteItem={handleDeleteContinueWatching}
-                  onToggleComplete={handleToggleComplete}
-                  onClearAll={handleClearAllContinueWatching}
-                />
-
                 <MediaRow
                   title="Trending Now"
                   items={trending}
