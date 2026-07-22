@@ -38,9 +38,10 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({
   const mediaType: MediaType = item.media_type || (item.title ? 'movie' : 'tv');
   const title = item.title || item.name || 'Title';
 
-  // Fetch TV / Movie duration and details from TMDB
+  // Fetch TV / Movie duration and details from TMDB (exact runtime for movies & TV episodes)
   useEffect(() => {
     if (mediaType === 'tv') {
+      // 1. Fetch TV show main details
       fetchTMDB(`/tv/${item.id}`)
         .then((data) => {
           if (data.number_of_seasons) {
@@ -55,24 +56,40 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({
           }
         })
         .catch(() => {});
+
+      // 2. Fetch specific episode runtime details
+      fetchTMDB(`/tv/${item.id}/season/${season}/episode/${episode}`)
+        .then((epData) => {
+          if (epData && typeof epData.runtime === 'number' && epData.runtime > 0) {
+            setDuration(epData.runtime * 60);
+          }
+        })
+        .catch(() => {});
     } else {
+      // Fetch movie runtime details
       fetchTMDB(`/movie/${item.id}`)
         .then((data) => {
-          if (data.runtime) {
+          if (data && typeof data.runtime === 'number' && data.runtime > 0) {
             setDuration(data.runtime * 60);
           }
         })
         .catch(() => {});
     }
-  }, [item.id, mediaType, season]);
+  }, [item.id, mediaType, season, episode]);
 
-  // Load previously saved continue watching progress for this exact media/season/episode
+  // Load previously saved continue watching progress & server choice for this exact item
   useEffect(() => {
     const uniqueId = mediaType === 'tv' ? `tv-${item.id}` : `movie-${item.id}`;
     const list = getContinueWatchingList();
     const existing = list.find((x) => x.id === uniqueId || (x.tmdbId === item.id && x.mediaType === mediaType));
 
     if (existing) {
+      if (existing.serverId) {
+        const savedServer = STREAM_SERVERS.find((s) => s.id === existing.serverId);
+        if (savedServer) {
+          setSelectedServer(savedServer);
+        }
+      }
       if (existing.progressPercentage !== undefined) {
         setProgressPercentage(existing.progressPercentage);
       }
@@ -162,9 +179,10 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({
       certification: item.certification,
       voteAverage: item.vote_average,
       completed: progressPercentage >= 95,
+      serverId: selectedServer.id,
     });
     if (onProgressUpdate) onProgressUpdate();
-  }, [item, mediaType, season, episode, title, progressPercentage, currentTime, duration, onProgressUpdate]);
+  }, [item, mediaType, season, episode, title, progressPercentage, currentTime, duration, selectedServer.id, onProgressUpdate]);
 
   // Fullscreen change listener
   useEffect(() => {

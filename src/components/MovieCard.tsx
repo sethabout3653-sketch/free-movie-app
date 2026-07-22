@@ -129,13 +129,20 @@ export const MovieCard: React.FC<MovieCardProps> = ({
 
         {/* Secondary Info Line */}
         <div className="flex items-center justify-between text-[10px] sm:text-xs text-gray-400">
-          <span className="uppercase font-semibold text-[#E50914]">
-            {continueWatchingItem
-              ? continueWatchingItem.mediaType === 'tv'
-                ? `S${continueWatchingItem.season || 1} E${continueWatchingItem.episode || 1}`
-                : 'Movie'
-              : mediaType.toUpperCase()}
-          </span>
+          <div className="flex items-center gap-1.5">
+            <span className="uppercase font-extrabold text-[#E50914]">
+              {continueWatchingItem
+                ? continueWatchingItem.mediaType === 'tv'
+                  ? `S${continueWatchingItem.season || 1} E${continueWatchingItem.episode || 1}`
+                  : 'Movie'
+                : mediaType.toUpperCase()}
+            </span>
+            {continueWatchingItem && (
+              <span className="text-[10px] font-mono text-zinc-400 bg-zinc-800/80 px-1 rounded">
+                {continueWatchingItem.progressPercentage}%
+              </span>
+            )}
+          </div>
 
           {continueWatchingItem && onToggleComplete && (
             <button

@@ -31,6 +31,7 @@ export interface ContinueWatchingItem {
   certification?: string;
   voteAverage?: number;
   completed?: boolean;
+  serverId?: string;
   lastUpdated: number; // timestamp
 }
 
