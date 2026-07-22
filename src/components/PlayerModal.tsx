@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Server, Maximize, Minimize, SkipForward, Tv, Film, Check, AlertCircle, Play, ChevronDown } from 'lucide-react';
+import { X, Server, Maximize, Minimize, SkipForward, Tv, Film, Check, AlertCircle, Play, Pause, ChevronDown, Clock, RotateCcw } from 'lucide-react';
 import { MediaItem, MediaType, ServerOption } from '../types';
 import { STREAM_SERVERS, fetchTMDB } from '../services/tmdb';
-import { saveContinueWatchingItem } from '../services/storage';
+import { saveContinueWatchingItem, getContinueWatchingList } from '../services/storage';
 
 interface PlayerModalProps {
   item: MediaItem;
@@ -19,21 +19,26 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({
   onClose,
   onProgressUpdate,
 }) => {
-  const [selectedServer, setSelectedServer] = useState<ServerOption>(STREAM_SERVERS[0]); // default to 2Embed
+  const [selectedServer, setSelectedServer] = useState<ServerOption>(STREAM_SERVERS[0]); // default server
   const [season, setSeason] = useState<number>(initialSeason);
   const [episode, setEpisode] = useState<number>(initialEpisode);
   const [totalSeasons, setTotalSeasons] = useState<number>(1);
   const [episodesInSeason, setEpisodesInSeason] = useState<number>(24);
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
   const [showServerMenu, setShowServerMenu] = useState<boolean>(false);
-  const [autoNextCountdown, setAutoNextCountdown] = useState<number | null>(null);
+
+  // Watch Progress & Duration tracking state
+  const [progressPercentage, setProgressPercentage] = useState<number>(5);
+  const [currentTime, setCurrentTime] = useState<number>(0); // in seconds
+  const [duration, setDuration] = useState<number>(item.title ? 7200 : 2700); // 2 hrs for movie, 45 mins for TV default
+  const [isPlaying, setIsPlaying] = useState<boolean>(true);
 
   const containerRef = useRef<HTMLDivElement>(null);
 
   const mediaType: MediaType = item.media_type || (item.title ? 'movie' : 'tv');
   const title = item.title || item.name || 'Title';
 
-  // Fetch TV show details for seasons and episode count if TV show
+  // Fetch TV / Movie duration and details from TMDB
   useEffect(() => {
     if (mediaType === 'tv') {
       fetchTMDB(`/tv/${item.id}`)
@@ -45,12 +50,47 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({
           if (s?.episode_count) {
             setEpisodesInSeason(s.episode_count);
           }
+          if (data.episode_run_time && data.episode_run_time.length > 0) {
+            setDuration(data.episode_run_time[0] * 60);
+          }
+        })
+        .catch(() => {});
+    } else {
+      fetchTMDB(`/movie/${item.id}`)
+        .then((data) => {
+          if (data.runtime) {
+            setDuration(data.runtime * 60);
+          }
         })
         .catch(() => {});
     }
   }, [item.id, mediaType, season]);
 
-  // Update document title when watching
+  // Load previously saved continue watching progress for this exact media/season/episode
+  useEffect(() => {
+    const uniqueId = mediaType === 'tv' ? `tv-${item.id}` : `movie-${item.id}`;
+    const list = getContinueWatchingList();
+    const existing = list.find((x) => x.id === uniqueId || (x.tmdbId === item.id && x.mediaType === mediaType));
+
+    if (existing) {
+      if (existing.progressPercentage !== undefined) {
+        setProgressPercentage(existing.progressPercentage);
+      }
+      if (existing.currentTime !== undefined) {
+        setCurrentTime(existing.currentTime);
+      } else if (existing.progressPercentage && duration) {
+        setCurrentTime(Math.round((existing.progressPercentage / 100) * duration));
+      }
+      if (existing.duration) {
+        setDuration(existing.duration);
+      }
+    } else {
+      setProgressPercentage(5);
+      setCurrentTime(0);
+    }
+  }, [item.id, mediaType, season, episode]);
+
+  // Document title updates when watching
   useEffect(() => {
     const mediaTitle = item.title || item.name || 'Title';
     if (mediaType === 'tv') {
@@ -63,7 +103,48 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({
     };
   }, [item, mediaType, season, episode]);
 
-  // Save progress in local storage when opening or changing episode
+  // Real-time watch heartbeat timer (increments seconds & recalculates percentage while watching)
+  useEffect(() => {
+    if (!isPlaying) return;
+
+    const interval = setInterval(() => {
+      setCurrentTime((prevTime) => {
+        const nextTime = prevTime + 1;
+        if (duration > 0) {
+          const calculatedPct = Math.min(100, Math.round((nextTime / duration) * 100));
+          setProgressPercentage(calculatedPct);
+        }
+        return nextTime;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [isPlaying, duration]);
+
+  // Listen to iframe postMessage events (for players like VidSrc / VidEasy / HTML5 embeds)
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      try {
+        const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
+        if (data && typeof data === 'object') {
+          if (typeof data.currentTime === 'number' && typeof data.duration === 'number' && data.duration > 0) {
+            const pct = Math.min(100, Math.round((data.currentTime / data.duration) * 100));
+            setCurrentTime(Math.round(data.currentTime));
+            setDuration(Math.round(data.duration));
+            setProgressPercentage(pct);
+          } else if (typeof data.progress === 'number') {
+            const pct = Math.min(100, Math.round(data.progress <= 1 ? data.progress * 100 : data.progress));
+            setProgressPercentage(pct);
+          }
+        }
+      } catch {}
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, []);
+
+  // Save updated progress to local storage and notify parent component
   useEffect(() => {
     const uniqueId = mediaType === 'tv' ? `tv-${item.id}` : `movie-${item.id}`;
     saveContinueWatchingItem({
@@ -73,15 +154,17 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({
       title,
       posterPath: item.poster_path,
       backdropPath: item.backdrop_path,
-      progressPercentage: 50, // default half watched or active
+      progressPercentage,
+      currentTime,
+      duration,
       season: mediaType === 'tv' ? season : undefined,
       episode: mediaType === 'tv' ? episode : undefined,
       certification: item.certification,
       voteAverage: item.vote_average,
-      completed: false,
+      completed: progressPercentage >= 95,
     });
     if (onProgressUpdate) onProgressUpdate();
-  }, [item, mediaType, season, episode, title, onProgressUpdate]);
+  }, [item, mediaType, season, episode, title, progressPercentage, currentTime, duration, onProgressUpdate]);
 
   // Fullscreen change listener
   useEffect(() => {
@@ -112,6 +195,34 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({
     } else if (season < totalSeasons) {
       setSeason(season + 1);
       setEpisode(1);
+    }
+  };
+
+  // Helper function to format seconds into MM:SS or HH:MM:SS
+  const formatTime = (seconds: number) => {
+    if (isNaN(seconds) || seconds <= 0) return '0:00';
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = Math.floor(seconds % 60);
+    if (h > 0) {
+      return `${h}:${m < 10 ? '0' : ''}${m}:${s < 10 ? '0' : ''}${s}`;
+    }
+    return `${m}:${s < 10 ? '0' : ''}${s}`;
+  };
+
+  const handleSeekProgress = (newPct: number) => {
+    const clampedPct = Math.max(0, Math.min(100, newPct));
+    setProgressPercentage(clampedPct);
+    if (duration > 0) {
+      setCurrentTime(Math.round((clampedPct / 100) * duration));
+    }
+  };
+
+  const handleAdjustTime = (secondsToAdd: number) => {
+    const newTime = Math.max(0, Math.min(duration, currentTime + secondsToAdd));
+    setCurrentTime(newTime);
+    if (duration > 0) {
+      setProgressPercentage(Math.min(100, Math.round((newTime / duration) * 100)));
     }
   };
 
@@ -249,7 +360,81 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({
         )}
       </div>
 
-      {/* Bottom TV Season / Episode Picker & Next Episode Controls */}
+      {/* Interactive Watch Progress & Sync Bar */}
+      <div
+        className={`w-full px-4 sm:px-8 py-2.5 bg-zinc-950/90 backdrop-blur-md flex flex-wrap items-center justify-between gap-3 z-30 border-t border-white/10 transition-opacity duration-300 ${
+          isFullscreen && selectedServer.id === 'zxcstream' ? 'opacity-0 hover:opacity-100' : 'opacity-100'
+        }`}
+      >
+        {/* Left: Play/Pause timer & time display */}
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setIsPlaying(!isPlaying)}
+            className="p-1.5 rounded-full bg-zinc-800 hover:bg-[#E50914] text-white transition-colors"
+            title={isPlaying ? 'Pause Timer Tracking' : 'Resume Timer Tracking'}
+          >
+            {isPlaying ? <Pause className="w-4 h-4 fill-white" /> : <Play className="w-4 h-4 fill-white ml-0.5" />}
+          </button>
+
+          <div className="flex items-center gap-2 text-xs font-mono font-bold text-gray-200">
+            <Clock className="w-3.5 h-3.5 text-[#E50914]" />
+            <span>{formatTime(currentTime)}</span>
+            <span className="text-gray-500">/</span>
+            <span className="text-gray-400">{formatTime(duration)}</span>
+          </div>
+
+          <span className="text-xs font-black text-red-400 bg-red-950/80 px-2 py-0.5 rounded border border-red-800/40">
+            {progressPercentage}% Watched
+          </span>
+        </div>
+
+        {/* Center: Interactive Scrubber Slider */}
+        <div className="flex-1 max-w-xl mx-2 flex items-center gap-3">
+          <input
+            type="range"
+            min="0"
+            max="100"
+            value={progressPercentage}
+            onChange={(e) => handleSeekProgress(Number(e.target.value))}
+            className="w-full h-2 bg-zinc-800 accent-[#E50914] rounded-lg cursor-pointer transition-all"
+            title="Drag slider to set where you paused on any server"
+          />
+        </div>
+
+        {/* Right: Quick position adjusters (-5m, +5m) */}
+        <div className="flex items-center gap-1.5">
+          <button
+            onClick={() => handleAdjustTime(-300)}
+            className="px-2 py-1 bg-zinc-900 border border-zinc-700 hover:border-red-600 text-gray-300 hover:text-white rounded text-[11px] font-bold transition-all"
+            title="Rewind 5 minutes"
+          >
+            -5m
+          </button>
+          <button
+            onClick={() => handleAdjustTime(-60)}
+            className="px-2 py-1 bg-zinc-900 border border-zinc-700 hover:border-red-600 text-gray-300 hover:text-white rounded text-[11px] font-bold transition-all"
+            title="Rewind 1 minute"
+          >
+            -1m
+          </button>
+          <button
+            onClick={() => handleAdjustTime(60)}
+            className="px-2 py-1 bg-zinc-900 border border-zinc-700 hover:border-red-600 text-gray-300 hover:text-white rounded text-[11px] font-bold transition-all"
+            title="Forward 1 minute"
+          >
+            +1m
+          </button>
+          <button
+            onClick={() => handleAdjustTime(300)}
+            className="px-2 py-1 bg-zinc-900 border border-zinc-700 hover:border-red-600 text-gray-300 hover:text-white rounded text-[11px] font-bold transition-all"
+            title="Forward 5 minutes"
+          >
+            +5m
+          </button>
+        </div>
+      </div>
+
+      {/* Bottom TV Season / Episode Picker & Server Info Bar */}
       <div
         className={`w-full px-4 sm:px-8 py-3 bg-gradient-to-t from-black via-black/90 to-transparent flex flex-wrap items-center justify-between gap-3 z-30 border-t border-white/5 transition-opacity duration-300 ${
           isFullscreen && selectedServer.id === 'zxcstream' ? 'opacity-0 hover:opacity-100' : 'opacity-100'
@@ -310,7 +495,7 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({
           <span className="w-2 h-2 rounded-full bg-green-500 animate-ping"></span>
           <span>Server Active: <strong className="text-white">{selectedServer.name}</strong></span>
           <span className="text-zinc-600">|</span>
-          <span className="text-gray-400 hidden sm:inline">No Sandbox Enforced</span>
+          <span className="text-gray-400 hidden sm:inline">Progress Synced</span>
         </div>
       </div>
     </div>

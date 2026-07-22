@@ -152,23 +152,11 @@ export const STREAMING_PROVIDERS: StreamingProvider[] = [
   }
 ];
 
-// Comprehensive list of 13 servers as requested
+// Stream servers list
 export const STREAM_SERVERS: ServerOption[] = [
   {
-    id: '2embed',
-    name: '2Embed (Primary)',
-    badge: 'Fastest',
-    quality: '1080p',
-    speed: 'Ultra Fast',
-    supportsTv: true,
-    getUrl: (id, type, s = 1, e = 1) =>
-      type === 'movie'
-        ? `https://www.2embed.cc/embed/${id}`
-        : `https://www.2embed.cc/embedtv/${id}&s=${s}&e=${e}`,
-  },
-  {
     id: 'zxcstream',
-    name: 'ZXCStream (Built-in Fullscreen)',
+    name: 'ZXCStream',
     badge: 'Auto-Full',
     quality: '1080p HD',
     speed: 'Ultra Fast',
@@ -179,95 +167,11 @@ export const STREAM_SERVERS: ServerOption[] = [
         : `https://zxcstream.xyz/player/tv/${id}/${s}/${e}`,
   },
   {
-    id: 'vidsrc_icu',
-    name: 'VidSrc.icu',
-    badge: 'HD',
-    quality: '1080p',
-    speed: 'Fast',
-    supportsTv: true,
-    getUrl: (id, type, s = 1, e = 1) =>
-      type === 'movie'
-        ? `https://vidsrc.icu/embed/movie/${id}`
-        : `https://vidsrc.icu/embed/tv/${id}/${s}/${e}`,
-  },
-  {
-    id: 'vidsrc_pro',
-    name: 'VidSrc Pro',
+    id: 'vidsrc',
+    name: 'VidSrc',
     badge: 'Popular',
     quality: '1080p',
     speed: 'Fast',
-    supportsTv: true,
-    getUrl: (id, type, s = 1, e = 1) =>
-      type === 'movie'
-        ? `https://vidsrc.pro/embed/movie/${id}`
-        : `https://vidsrc.pro/embed/tv/${id}/${s}/${e}`,
-  },
-  {
-    id: 'vidsrc_cc',
-    name: 'VidSrc.cc',
-    badge: 'Multi-Sub',
-    quality: '1080p',
-    speed: 'Fast',
-    supportsTv: true,
-    getUrl: (id, type, s = 1, e = 1) =>
-      type === 'movie'
-        ? `https://vidsrc.cc/v2/embed/movie/${id}`
-        : `https://vidsrc.cc/v2/embed/tv/${id}/${s}/${e}`,
-  },
-  {
-    id: 'smashystream',
-    name: 'SmashyStream',
-    badge: 'Backup',
-    quality: '1080p',
-    speed: 'Fast',
-    supportsTv: true,
-    getUrl: (id, type, s = 1, e = 1) =>
-      type === 'movie'
-        ? `https://embed.smashystream.com/playere.php?tmdb=${id}`
-        : `https://embed.smashystream.com/playere.php?tmdb=${id}&season=${s}&episode=${e}`,
-  },
-  {
-    id: 'autoembed',
-    name: 'AutoEmbed',
-    badge: 'Reliable',
-    quality: '1080p',
-    speed: 'Fast',
-    supportsTv: true,
-    getUrl: (id, type, s = 1, e = 1) =>
-      type === 'movie'
-        ? `https://player.autoembed.cc/embed/movie/${id}`
-        : `https://player.autoembed.cc/embed/tv/${id}/${s}/${e}`,
-  },
-  {
-    id: 'superembed',
-    name: 'SuperEmbed (Multiserver)',
-    badge: 'Multi',
-    quality: '4K/1080p',
-    speed: 'Ultra Fast',
-    supportsTv: true,
-    getUrl: (id, type, s = 1, e = 1) =>
-      type === 'movie'
-        ? `https://multiembed.mov/directstream.php?video_id=${id}&tmdb=1`
-        : `https://multiembed.mov/directstream.php?video_id=${id}&tmdb=1&s=${s}&e=${e}`,
-  },
-  {
-    id: 'embedsu',
-    name: 'Embed.su',
-    badge: 'Clean UI',
-    quality: '1080p',
-    speed: 'Fast',
-    supportsTv: true,
-    getUrl: (id, type, s = 1, e = 1) =>
-      type === 'movie'
-        ? `https://embed.su/embed/movie/${id}`
-        : `https://embed.su/embed/tv/${id}/${s}/${e}`,
-  },
-  {
-    id: 'vidsrc_me',
-    name: 'VidSrc.me',
-    badge: 'Classic',
-    quality: '720p/1080p',
-    speed: 'Standard',
     supportsTv: true,
     getUrl: (id, type, s = 1, e = 1) =>
       type === 'movie'
@@ -275,40 +179,16 @@ export const STREAM_SERVERS: ServerOption[] = [
         : `https://vidsrc.me/embed/tv?tmdb=${id}&season=${s}&episode=${e}`,
   },
   {
-    id: 'movieapi',
-    name: 'MovieAPI.club',
-    badge: 'Fast',
-    quality: '1080p',
-    speed: 'Fast',
+    id: 'videasy',
+    name: 'VidEasy',
+    badge: 'Ultra Fast',
+    quality: '1080p HD',
+    speed: 'Ultra Fast',
     supportsTv: true,
     getUrl: (id, type, s = 1, e = 1) =>
       type === 'movie'
-        ? `https://movieapi.club/movie/${id}`
-        : `https://movieapi.club/tv/${id}-${s}-${e}`,
-  },
-  {
-    id: 'nontonto',
-    name: 'NontonGo',
-    badge: 'Mirror',
-    quality: '1080p',
-    speed: 'Standard',
-    supportsTv: true,
-    getUrl: (id, type, s = 1, e = 1) =>
-      type === 'movie'
-        ? `https://www.NontonGo.win/embed/movie/${id}`
-        : `https://www.NontonGo.win/embed/tv/${id}/${s}/${e}`,
-  },
-  {
-    id: 'vidsrc_xyz',
-    name: 'VidSrc.xyz',
-    badge: 'Alternative',
-    quality: '1080p',
-    speed: 'Standard',
-    supportsTv: true,
-    getUrl: (id, type, s = 1, e = 1) =>
-      type === 'movie'
-        ? `https://vidsrc.xyz/embed/movie/${id}`
-        : `https://vidsrc.xyz/embed/tv/${id}/${s}/${e}`,
+        ? `https://player.videasy.net/movie/${id}`
+        : `https://player.videasy.net/tv/${id}/${s}/${e}`,
   },
 ];
 

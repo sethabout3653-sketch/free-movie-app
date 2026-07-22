@@ -24,6 +24,8 @@ export interface ContinueWatchingItem {
   posterPath: string | null;
   backdropPath: string | null;
   progressPercentage: number; // 0 - 100
+  currentTime?: number; // in seconds
+  duration?: number; // in seconds
   season?: number;
   episode?: number;
   certification?: string;
