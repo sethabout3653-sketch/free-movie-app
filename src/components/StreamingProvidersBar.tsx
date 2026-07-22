@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from 'react';
+ import React, { useRef, useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, Sparkles } from 'lucide-react';
 import { STREAMING_PROVIDERS, TMDB_BASE_URL, TMDB_API_KEY, TMDB_IMAGE_BASE } from '../services/tmdb';
 
@@ -90,15 +90,15 @@ export const StreamingProvidersBar: React.FC<StreamingProvidersBarProps> = ({
         {/* Scrollable Container */}
         <div
           ref={rowRef}
-          className="flex items-center gap-3 overflow-x-auto no-scrollbar py-2.5 px-1 scroll-smooth"
+          className="flex items-center gap-3 sm:gap-4 overflow-x-auto no-scrollbar py-3 px-1 scroll-smooth"
         >
-          {/* 'All' Reset Pill */}
+          {/* 'All' Reset Card */}
           <button
             onClick={() => onSelectProvider(null)}
-            className={`flex-shrink-0 h-16 px-6 rounded-2xl border font-black text-xs sm:text-sm flex items-center justify-center transition-all duration-300 transform hover:scale-105 shadow-lg ${
+            className={`flex-shrink-0 w-28 sm:w-36 md:w-40 h-20 sm:h-24 md:h-28 rounded-2xl sm:rounded-3xl border font-black text-xs sm:text-sm uppercase tracking-wider flex items-center justify-center transition-all duration-300 transform hover:scale-105 shadow-2xl ${
               selectedProviderId === null
                 ? 'bg-[#E50914] text-white border-red-500 shadow-red-950/80 scale-105 ring-2 ring-red-500'
-                : 'bg-zinc-900/90 text-gray-300 border-zinc-800 hover:border-zinc-600 hover:text-white'
+                : 'bg-black text-white border-zinc-800 hover:border-zinc-500 hover:bg-zinc-950'
             }`}
           >
             All Networks
@@ -106,44 +106,42 @@ export const StreamingProvidersBar: React.FC<StreamingProvidersBarProps> = ({
 
           {STREAMING_PROVIDERS.map((provider) => {
             const isSelected = selectedProviderId === provider.id;
-            const logoUrl = tmdbLogos[provider.id] || provider.logoSvg;
+            // Use crisp vector SVG logo as primary for optimal fitting & resolution on dark/black backgrounds
+            const logoUrl = provider.logoSvg || tmdbLogos[provider.id];
 
             return (
               <button
                 key={provider.id}
                 onClick={() => onSelectProvider(isSelected ? null : provider.id)}
-                className={`flex-shrink-0 relative group/btn h-16 px-5 rounded-2xl border flex items-center justify-center gap-3 transition-all duration-300 transform hover:scale-105 shadow-xl ${
+                className={`flex-shrink-0 relative group/btn w-36 sm:w-48 md:w-56 h-20 sm:h-24 md:h-28 p-3 sm:p-5 rounded-2xl sm:rounded-3xl border flex items-center justify-center transition-all duration-300 transform hover:scale-105 shadow-2xl overflow-hidden ${
                   isSelected
-                    ? 'bg-zinc-900 border-[#E50914] ring-2 ring-[#E50914] shadow-red-950/60 scale-105'
-                    : 'bg-zinc-900/90 border-zinc-800 hover:border-zinc-600 hover:bg-zinc-800/90'
+                    ? 'bg-black border-2 border-[#E50914] ring-2 ring-[#E50914]/60 shadow-red-950/80 scale-105'
+                    : 'bg-black border-zinc-800 hover:border-zinc-500 hover:bg-zinc-950'
                 }`}
                 title={`Filter by ${provider.name}`}
               >
-                {/* High Quality Official Brand Logo Container */}
-                <div className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center p-1.5 bg-white rounded-xl border border-white/20 shadow-md overflow-hidden group-hover/btn:scale-105 transition-all">
+                {/* High Quality Official Brand Logo - Full Fit Centered in Black Card */}
+                <div className="w-full h-full flex items-center justify-center relative z-10 pointer-events-none">
                   <img
                     src={logoUrl}
                     alt={provider.name}
                     loading="lazy"
                     referrerPolicy="no-referrer"
-                    className="w-full h-full object-contain filter drop-shadow-sm"
+                    className={`max-w-[85%] max-h-[75%] w-auto h-auto object-contain transition-transform duration-300 group-hover/btn:scale-108 filter drop-shadow-[0_2px_6px_rgba(255,255,255,0.1)] ${
+                      provider.invertOnDark ? 'brightness-0 invert' : ''
+                    }`}
                     onError={(e) => {
-                      // Fallback to provider.logoSvg if tmdb logo fails
-                      if (logoUrl !== provider.logoSvg) {
-                        (e.target as HTMLImageElement).src = provider.logoSvg;
+                      // Fallback to TMDB logo if SVG fails
+                      if (tmdbLogos[provider.id] && logoUrl !== tmdbLogos[provider.id]) {
+                        (e.target as HTMLImageElement).src = tmdbLogos[provider.id];
                       }
                     }}
                   />
                 </div>
 
-                {/* Studio / Network Label */}
-                <span className={`font-bold text-xs sm:text-sm whitespace-nowrap tracking-wide transition-colors ${isSelected ? 'text-white font-extrabold' : 'text-gray-200 group-hover/btn:text-white'}`}>
-                  {provider.name}
-                </span>
-
                 {/* Selected Active Badge */}
                 {isSelected && (
-                  <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-[#E50914] rounded-full border-2 border-black animate-pulse" />
+                  <span className="absolute top-2.5 right-2.5 w-3.5 h-3.5 bg-[#E50914] rounded-full border-2 border-black animate-pulse z-20" />
                 )}
               </button>
             );
@@ -161,4 +159,4 @@ export const StreamingProvidersBar: React.FC<StreamingProvidersBarProps> = ({
       </div>
     </div>
   );
-};
+}; 
