@@ -153,7 +153,7 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({
     };
   }, [item, mediaType, season, episode, title, progressPercentage, currentTime, duration, selectedServer.id]);
 
-  // Comprehensive listener for iframe duration / time update & fullscreen events across all servers (VidPlays, VidSrc, VidEasy, JWPlayer, etc.)
+  // Comprehensive listener for iframe duration / time update & fullscreen events across all servers (SuperEmbed, ZXCStream, VidSrc, VidEasy, etc.)
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
       try {
