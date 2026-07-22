@@ -18,7 +18,7 @@ export const STREAMING_PROVIDERS: StreamingProvider[] = [
     id: 'hulu',
     name: 'Hulu',
     badgeColor: '#1CE783',
-    logoSvg: 'https://upload.wikimedia.org/wikipedia/commons/e/e4/Hulu_Logo.svg',
+    logoSvg: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/03/Hulu_logo_%282014%29.svg/3840px-Hulu_logo_%282014%29.svg.png',
     networkId: 453,
     providerId: 15,
   },
@@ -26,17 +26,19 @@ export const STREAMING_PROVIDERS: StreamingProvider[] = [
     id: 'peacock',
     name: 'Peacock',
     badgeColor: '#000000',
-    logoSvg: 'https://upload.wikimedia.org/wikipedia/commons/d/d3/NBCUniversal_Peacock_Logo.svg',
+    logoSvg: 'https://logos-world.net/wp-content/uploads/2023/03/Peacock-Symbol.png',
     networkId: 3353,
     providerId: 386,
+    invertOnDark: false,
   },
   {
     id: 'paramount',
     name: 'Paramount+',
     badgeColor: '#0064FF',
-    logoSvg: 'https://upload.wikimedia.org/wikipedia/commons/a/a5/Paramount_Plus_logo.svg',
+    logoSvg: 'https://upload.wikimedia.org/wikipedia/commons/e/ea/Paramount%2B_logo.png',
     networkId: 4330,
     providerId: 531,
+    invertOnDark: true,
   },
   {
     id: 'crunchyroll',
@@ -53,6 +55,7 @@ export const STREAMING_PROVIDERS: StreamingProvider[] = [
     logoSvg: 'https://upload.wikimedia.org/wikipedia/commons/2/28/Apple_TV_Plus_Logo.svg',
     networkId: 2552,
     providerId: 350,
+    invertOnDark: true,
   },
   {
     id: 'disney',
@@ -77,13 +80,15 @@ export const STREAMING_PROVIDERS: StreamingProvider[] = [
     logoSvg: 'https://upload.wikimedia.org/wikipedia/commons/1/11/Amazon_Prime_Video_logo.svg',
     networkId: 1024,
     providerId: 9,
+    invertOnDark: true,
   },
   {
     id: 'marvel',
     name: 'Marvel Studios',
     badgeColor: '#ED1D24',
-    logoSvg: 'https://upload.wikimedia.org/wikipedia/commons/0/04/MarvelStudios.svg',
+    logoSvg: 'https://www.freepnglogos.com/uploads/marvel-logo-png/new-marvel-studios-logo-debuted-marvelstudios-3.png',
     companyId: 420,
+    invertOnDark: false,
   },
   {
     id: 'warnerbros',
@@ -98,6 +103,7 @@ export const STREAMING_PROVIDERS: StreamingProvider[] = [
     badgeColor: '#000000',
     logoSvg: 'https://upload.wikimedia.org/wikipedia/commons/e/e0/Universal_Pictures_logo.svg',
     companyId: 33,
+    invertOnDark: true,
   },
   {
     id: 'sony',
@@ -105,6 +111,7 @@ export const STREAMING_PROVIDERS: StreamingProvider[] = [
     badgeColor: '#000000',
     logoSvg: 'https://upload.wikimedia.org/wikipedia/commons/a/a2/Sony_Pictures_logo.svg',
     companyId: 34,
+    invertOnDark: true,
   },
   {
     id: 'a24',
@@ -112,6 +119,7 @@ export const STREAMING_PROVIDERS: StreamingProvider[] = [
     badgeColor: '#000000',
     logoSvg: 'https://upload.wikimedia.org/wikipedia/commons/7/7b/A24_logo.svg',
     companyId: 41077,
+    invertOnDark: true,
   },
   {
     id: 'starz',
@@ -120,6 +128,7 @@ export const STREAMING_PROVIDERS: StreamingProvider[] = [
     logoSvg: 'https://upload.wikimedia.org/wikipedia/commons/6/60/Starz_2022.svg',
     networkId: 318,
     providerId: 43,
+    invertOnDark: true,
   },
   {
     id: 'showtime',
@@ -135,6 +144,7 @@ export const STREAMING_PROVIDERS: StreamingProvider[] = [
     badgeColor: '#000000',
     logoSvg: 'https://upload.wikimedia.org/wikipedia/commons/1/1d/AMC_Logo.svg',
     networkId: 174,
+    invertOnDark: true,
   },
   {
     id: 'fx',
@@ -142,6 +152,7 @@ export const STREAMING_PROVIDERS: StreamingProvider[] = [
     badgeColor: '#000000',
     logoSvg: 'https://upload.wikimedia.org/wikipedia/commons/8/87/FX_Network_logo.svg',
     networkId: 88,
+    invertOnDark: true,
   },
   {
     id: 'pixar',
@@ -149,6 +160,7 @@ export const STREAMING_PROVIDERS: StreamingProvider[] = [
     badgeColor: '#000000',
     logoSvg: 'https://upload.wikimedia.org/wikipedia/commons/4/40/Pixar_logo.svg',
     companyId: 3,
+    invertOnDark: true,
   }
 ];
 
