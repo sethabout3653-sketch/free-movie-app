@@ -153,7 +153,7 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({
     };
   }, [item, mediaType, season, episode, title, progressPercentage, currentTime, duration, selectedServer.id]);
 
-  // Comprehensive listener for iframe duration / time update events across all servers (VidSrc, VidEasy, ZXCStream, JWPlayer, etc.)
+  // Comprehensive listener for iframe duration / time update & fullscreen events across all servers (VidPlays, VidSrc, VidEasy, JWPlayer, etc.)
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
       try {
@@ -161,12 +161,20 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({
         const data = typeof raw === 'string' ? JSON.parse(raw) : raw;
         if (!data || typeof data !== 'object') return;
 
-        // Check for player state events (play/pause/playing/ended)
+        // Check for player state events (play/pause/playing/ended/fullscreen)
         const eventType = (data.event || data.type || data.status || '').toString().toLowerCase();
         if (eventType.includes('play') || eventType.includes('start')) {
           setIsPlaying(true);
         } else if (eventType.includes('pause') || eventType.includes('stop') || eventType.includes('end')) {
           setIsPlaying(false);
+        } else if (eventType.includes('fullscreen') || eventType.includes('requestfullscreen') || eventType.includes('enterfullscreen')) {
+          if (containerRef.current) {
+            if (containerRef.current.requestFullscreen) {
+              containerRef.current.requestFullscreen().catch(() => {});
+            } else if ((containerRef.current as any).webkitRequestFullscreen) {
+              (containerRef.current as any).webkitRequestFullscreen();
+            }
+          }
         }
 
         // Extract nested payload if present
@@ -341,8 +349,12 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({
           src={currentEmbedUrl}
           title={title}
           className="w-full h-full border-0 absolute inset-0"
-          allow="autoplay; encrypted-media; fullscreen; picture-in-picture; accelerometer; gyroscope; clipboard-write; web-share"
-          allowFullScreen
+          allow="autoplay *; fullscreen *; encrypted-media *; picture-in-picture *; accelerometer *; gyroscope *; clipboard-write *; web-share *"
+          allowFullScreen={true}
+          // @ts-ignore
+          webkitallowfullscreen="true"
+          // @ts-ignore
+          mozallowfullscreen="true"
         />
       </div>
 
