@@ -441,10 +441,10 @@ export default function App() {
 
       {/* Footer */}
       <footer className="mt-20 border-t border-zinc-800 pt-12 pb-8 text-center text-xs text-gray-500 space-y-3">
-        <div className="font-netflix text-2xl text-[#E50914] tracking-widest">FreeNetflix</div>
-        <p>© 2026 FreeNetflix. Stream your favorite movies and TV shows for free.</p>
+        <div className="font-netflix text-2xl text-[#E50914] tracking-widest">FREEFLIX</div>
+        <p>© 2026 FREEFLIX. Stream your favorite movies and TV shows for free.</p>
         <p className="text-[10px] text-gray-600 max-w-xl mx-auto px-4">
-          Disclaimer: FreeNetflix does not host any media files on its servers. All videos are embedded from third-party streaming providers.
+          Disclaimer: FREEFLIX does not host any media files on its servers. All videos are embedded from third-party streaming providers.
         </p>
       </footer>
     </div>

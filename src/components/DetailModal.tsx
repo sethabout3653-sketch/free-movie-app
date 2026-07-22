@@ -24,9 +24,9 @@ export const DetailModal: React.FC<DetailModalProps> = ({ item, onClose, onPlay 
 
   useEffect(() => {
     const mediaTitle = item.title || item.name || 'Untitled';
-    document.title = `${mediaTitle} - FreeNetflix`;
+    document.title = `${mediaTitle} - FREEFLIX`;
     return () => {
-      document.title = 'FreeNetflix - Stream Movies & TV Shows';
+      document.title = 'FREEFLIX - Stream Movies & TV Shows';
     };
   }, [item]);
 

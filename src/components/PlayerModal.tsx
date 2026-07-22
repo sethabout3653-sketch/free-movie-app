@@ -94,12 +94,12 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({
   useEffect(() => {
     const mediaTitle = item.title || item.name || 'Title';
     if (mediaType === 'tv') {
-      document.title = `Watching ${mediaTitle} (S${season}:E${episode}) - FreeNetflix`;
+      document.title = `Watching ${mediaTitle} (S${season}:E${episode}) - FREEFLIX`;
     } else {
-      document.title = `Watching ${mediaTitle} - FreeNetflix`;
+      document.title = `Watching ${mediaTitle} - FREEFLIX`;
     }
     return () => {
-      document.title = 'FreeNetflix - Stream Movies & TV Shows';
+      document.title = 'FREEFLIX - Stream Movies & TV Shows';
     };
   }, [item, mediaType, season, episode]);
 
@@ -246,7 +246,7 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({
           <div>
             <div className="flex items-center gap-2">
               <span className="text-xs uppercase font-extrabold text-[#E50914] bg-red-950/60 border border-red-800/40 px-2 py-0.5 rounded">
-                FreeNetflix Player
+                FREEFLIX Player
               </span>
               <h2 className="text-base sm:text-lg font-bold text-white line-clamp-1">
                 {title}
