@@ -116,7 +116,7 @@ export const STREAMING_PROVIDERS: StreamingProvider[] = [
     badgeColor: '#000000',
     logoSvg: 'https://upload.wikimedia.org/wikipedia/commons/8/8d/Sony_Pictures_Inc._logo.svg',
     companyId: 34,
-    invertOnDark: false,
+    invertOnDark: true,
   },
   {
     id: 'a24',
