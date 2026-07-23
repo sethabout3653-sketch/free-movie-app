@@ -1,10 +1,28 @@
 import React, { useState, useEffect } from 'react';
-import { Film, Tv, TrendingUp, Sparkles, Flame, Clapperboard } from 'lucide-react';
+import {
+  Film,
+  Tv,
+  Sparkles,
+  Flame,
+  Clapperboard,
+  Search,
+  X,
+  Bookmark,
+  Filter,
+  Tv2,
+  Play,
+  Info,
+  Trash2,
+  Clock,
+  Star,
+  Zap,
+} from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 import { MediaItem, MediaType } from './types';
 import { STREAMING_PROVIDERS, fetchTMDB } from './services/tmdb';
 
 import { Navbar } from './components/Navbar';
-import { MyListSpotlight } from './components/MyListSpotlight';
+import { HeroBannerDisney } from './components/HeroBannerDisney';
 import { StreamingProvidersBar } from './components/StreamingProvidersBar';
 import { GenreNavigationBar, GenreOption } from './components/GenreNavigationBar';
 import { MediaRow } from './components/MediaRow';
@@ -13,21 +31,66 @@ import { PlayerModal } from './components/PlayerModal';
 import { DetailModal } from './components/DetailModal';
 
 export default function App() {
-  const [activeCategory, setActiveCategory] = useState<string>('home');
+  const [activeTab, setActiveTab] = useState<string>('home');
   const [selectedProviderId, setSelectedProviderId] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState<string>('');
 
-  // Rows state
-  const [trending, setTrending] = useState<MediaItem[]>([]);
+  // Watchlist state (persistent in localStorage)
+  const [watchlist, setWatchlist] = useState<MediaItem[]>(() => {
+    try {
+      const saved = localStorage.getItem('freeflix_watchlist');
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      return [];
+    }
+  });
+
+  const handleToggleWatchlist = (item: MediaItem) => {
+    setWatchlist((prev) => {
+      const exists = prev.some((i) => i.id === item.id);
+      let next: MediaItem[];
+      if (exists) {
+        next = prev.filter((i) => i.id !== item.id);
+      } else {
+        next = [item, ...prev];
+      }
+      try {
+        localStorage.setItem('freeflix_watchlist', JSON.stringify(next));
+      } catch (e) {}
+      return next;
+    });
+  };
+
+  // Watchlist sub-tab filter
+  const [watchlistFilter, setWatchlistFilter] = useState<'all' | 'movie' | 'tv'>('all');
+
+  // Search state
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [searchResults, setSearchResults] = useState<MediaItem[]>([]);
+  const [searchTypeFilter, setSearchTypeFilter] = useState<'all' | 'movie' | 'tv'>('all');
+
+  // Home Datasets
+  const [heroItems, setHeroItems] = useState<MediaItem[]>([]);
   const [popularMovies, setPopularMovies] = useState<MediaItem[]>([]);
   const [topTv, setTopTv] = useState<MediaItem[]>([]);
-  const [providerMovies, setProviderMovies] = useState<MediaItem[]>([]);
   const [actionMovies, setActionMovies] = useState<MediaItem[]>([]);
   const [animeShows, setAnimeShows] = useState<MediaItem[]>([]);
-  const [searchResults, setSearchResults] = useState<MediaItem[]>([]);
 
-  // Search filtering state
-  const [searchTypeFilter, setSearchTypeFilter] = useState<'all' | 'movie' | 'tv'>('all');
+  // Movies Tab Specific Datasets
+  const [topRatedMovies, setTopRatedMovies] = useState<MediaItem[]>([]);
+  const [sciFiMovies, setSciFiMovies] = useState<MediaItem[]>([]);
+  const [horrorMovies, setHorrorMovies] = useState<MediaItem[]>([]);
+  const [comedyMovies, setComedyMovies] = useState<MediaItem[]>([]);
+  const [movieGenreFilter, setMovieGenreFilter] = useState<string>('all');
+
+  // TV Shows Tab Specific Datasets
+  const [tvDramas, setTvDramas] = useState<MediaItem[]>([]);
+  const [tvComedies, setTvComedies] = useState<MediaItem[]>([]);
+  const [tvSciFi, setTvSciFi] = useState<MediaItem[]>([]);
+  const [tvCrime, setTvCrime] = useState<MediaItem[]>([]);
+  const [tvGenreFilter, setTvGenreFilter] = useState<string>('all');
+
+  // Provider filter dataset
+  const [providerMovies, setProviderMovies] = useState<MediaItem[]>([]);
 
   // Genre filtering state
   const [selectedGenreOption, setSelectedGenreOption] = useState<GenreOption | null>(null);
@@ -40,46 +103,95 @@ export default function App() {
   const [playerEpisode, setPlayerEpisode] = useState<number>(1);
   const [detailMedia, setDetailMedia] = useState<MediaItem | null>(null);
 
-  // Initial Content Fetching
+  // Scroll to top when tab changes
   useEffect(() => {
-    async function loadData() {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [activeTab]);
+
+  // Initial Data Fetching - Load Distinct Datasets for Home, Movies & TV Shows
+  useEffect(() => {
+    async function loadAllData() {
       try {
-        // Trending
-        const trendingData = await fetchTMDB('/trending/all/week');
-        const trendingResults: MediaItem[] = trendingData.results || [];
-        setTrending(trendingResults);
+        const [
+          trendingRes,
+          moviesRes,
+          tvRes,
+          actionRes,
+          animeRes,
+          topRatedMoviesRes,
+          sciFiMoviesRes,
+          horrorMoviesRes,
+          comedyMoviesRes,
+          tvDramasRes,
+          tvComediesRes,
+          tvSciFiRes,
+          tvCrimeRes,
+        ] = await Promise.all([
+          fetchTMDB('/trending/all/week'),
+          fetchTMDB('/movie/popular'),
+          fetchTMDB('/tv/popular'),
+          fetchTMDB('/discover/movie', { with_genres: '28' }),
+          fetchTMDB('/discover/tv', { with_genres: '16' }),
+          fetchTMDB('/movie/top_rated'),
+          fetchTMDB('/discover/movie', { with_genres: '878' }),
+          fetchTMDB('/discover/movie', { with_genres: '27' }),
+          fetchTMDB('/discover/movie', { with_genres: '35' }),
+          fetchTMDB('/discover/tv', { with_genres: '18' }),
+          fetchTMDB('/discover/tv', { with_genres: '35' }),
+          fetchTMDB('/discover/tv', { with_genres: '10765' }),
+          fetchTMDB('/discover/tv', { with_genres: '80' }),
+        ]);
 
-        // Popular Movies
-        const moviesData = await fetchTMDB('/movie/popular');
+        setHeroItems(trendingRes.results || []);
+
         setPopularMovies(
-          (moviesData.results || []).map((m: MediaItem) => ({ ...m, media_type: 'movie' as MediaType }))
+          (moviesRes.results || []).map((m: MediaItem) => ({ ...m, media_type: 'movie' as MediaType }))
         );
-
-        // Top TV
-        const tvData = await fetchTMDB('/tv/popular');
         setTopTv(
-          (tvData.results || []).map((t: MediaItem) => ({ ...t, media_type: 'tv' as MediaType }))
+          (tvRes.results || []).map((t: MediaItem) => ({ ...t, media_type: 'tv' as MediaType }))
         );
-
-        // Action Genre (Genre 28)
-        const actionData = await fetchTMDB('/discover/movie', { with_genres: '28' });
         setActionMovies(
-          (actionData.results || []).map((m: MediaItem) => ({ ...m, media_type: 'movie' as MediaType }))
+          (actionRes.results || []).map((m: MediaItem) => ({ ...m, media_type: 'movie' as MediaType }))
+        );
+        setAnimeShows(
+          (animeRes.results || []).map((a: MediaItem) => ({ ...a, media_type: 'tv' as MediaType }))
         );
 
-        // Animation / Anime Genre (Genre 16)
-        const animeData = await fetchTMDB('/discover/tv', { with_genres: '16' });
-        setAnimeShows(
-          (animeData.results || []).map((a: MediaItem) => ({ ...a, media_type: 'tv' as MediaType }))
+        // Movie Hub
+        setTopRatedMovies(
+          (topRatedMoviesRes.results || []).map((m: MediaItem) => ({ ...m, media_type: 'movie' as MediaType }))
+        );
+        setSciFiMovies(
+          (sciFiMoviesRes.results || []).map((m: MediaItem) => ({ ...m, media_type: 'movie' as MediaType }))
+        );
+        setHorrorMovies(
+          (horrorMoviesRes.results || []).map((m: MediaItem) => ({ ...m, media_type: 'movie' as MediaType }))
+        );
+        setComedyMovies(
+          (comedyMoviesRes.results || []).map((m: MediaItem) => ({ ...m, media_type: 'movie' as MediaType }))
+        );
+
+        // TV Hub
+        setTvDramas(
+          (tvDramasRes.results || []).map((t: MediaItem) => ({ ...t, media_type: 'tv' as MediaType }))
+        );
+        setTvComedies(
+          (tvComediesRes.results || []).map((t: MediaItem) => ({ ...t, media_type: 'tv' as MediaType }))
+        );
+        setTvSciFi(
+          (tvSciFiRes.results || []).map((t: MediaItem) => ({ ...t, media_type: 'tv' as MediaType }))
+        );
+        setTvCrime(
+          (tvCrimeRes.results || []).map((t: MediaItem) => ({ ...t, media_type: 'tv' as MediaType }))
         );
       } catch (err) {
-        console.error('Error fetching initial TMDB data:', err);
+        console.error('Error fetching TMDB data:', err);
       }
     }
-    loadData();
+    loadAllData();
   }, []);
 
-  // Fetch when Provider selected
+  // Fetch when Streaming Provider Hub selected
   useEffect(() => {
     if (!selectedProviderId) {
       setProviderMovies([]);
@@ -168,7 +280,6 @@ export default function App() {
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  // Handlers for playing
   const handlePlayMedia = (item: MediaItem, season: number = 1, episode: number = 1) => {
     setPlayerMedia(item);
     setPlayerSeason(season);
@@ -181,275 +292,681 @@ export default function App() {
 
   const selectedProviderName = STREAMING_PROVIDERS.find((p) => p.id === selectedProviderId)?.name;
 
-  return (
-    <div className="min-h-screen bg-[#060608] text-white font-sans antialiased pb-20 selection:bg-[#E50914] relative overflow-x-hidden">
-      {/* Ambient Red Lighting Background Glow */}
-      <div className="fixed top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[500px] bg-red-900/15 blur-[140px] pointer-events-none rounded-full z-0" />
+  // Filtered Watchlist items
+  const filteredWatchlist = watchlist.filter((item) => {
+    if (watchlistFilter === 'all') return true;
+    const type = item.media_type || (item.title ? 'movie' : 'tv');
+    return type === watchlistFilter;
+  });
 
-      {/* Header Navbar */}
+  return (
+    <div className="min-h-screen bg-[#060608] text-white font-sans antialiased pb-20 selection:bg-white selection:text-black relative overflow-x-hidden">
+      {/* Top Navigation Bar */}
       <Navbar
-        onSearch={setSearchQuery}
-        activeCategory={activeCategory}
-        setActiveCategory={setActiveCategory}
-        onResetFilters={() => {
-          setSelectedProviderId(null);
-          setSelectedGenreOption(null);
+        activeTab={activeTab}
+        setActiveTab={(tab) => {
+          setActiveTab(tab);
+          if (tab !== 'search') {
+            setSearchQuery('');
+          }
         }}
+        onOpenSearch={() => setActiveTab('search')}
       />
 
-      {/* Main Content Area */}
-      <main className="relative z-10 space-y-8">
-        {/* Search Results View */}
-        {searchQuery.trim() ? (
-          <div className="pt-28 px-4 sm:px-8 max-w-7xl mx-auto space-y-8">
-            {/* Search Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-800/80 pb-6">
-              <div>
-                <div className="flex items-center gap-3">
-                  <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
-                    Search Results for <span className="text-[#E50914]">"{searchQuery}"</span>
-                  </h1>
-                  <span className="bg-red-950/80 text-red-400 border border-red-800/50 text-xs font-black px-3 py-1 rounded-full uppercase tracking-wider shadow-[0_0_10px_rgba(229,9,20,0.3)]">
-                    {searchResults.length} {searchResults.length === 1 ? 'Title' : 'Titles'}
-                  </span>
+      {/* Main View Area */}
+      <main className="relative z-10 space-y-6 pt-0">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activeTab}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -12 }}
+            transition={{ duration: 0.25, ease: 'easeInOut' }}
+          >
+            {/* ==================== 1. SEARCH TAB ==================== */}
+            {activeTab === 'search' && (
+              <div className="pt-24 sm:pt-28 px-4 sm:px-12 max-w-7xl mx-auto space-y-8 min-h-[85vh]">
+                {/* Search Header Box */}
+                <div className="bg-zinc-900/90 border border-white/15 p-4 sm:p-6 rounded-3xl shadow-2xl backdrop-blur-2xl max-w-3xl mx-auto space-y-4">
+                  <div className="flex items-center gap-3 bg-black/60 border border-white/10 rounded-2xl px-4 py-3 sm:py-4">
+                    <Search className="w-6 h-6 text-zinc-400 shrink-0" />
+                    <input
+                      type="text"
+                      placeholder="Search movies, TV shows, genres..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      autoFocus
+                      className="bg-transparent text-white text-base sm:text-lg w-full focus:outline-none placeholder-zinc-500 font-medium"
+                    />
+                    {searchQuery && (
+                      <button
+                        onClick={() => setSearchQuery('')}
+                        className="p-1.5 hover:bg-zinc-800 rounded-full text-zinc-400 hover:text-white"
+                      >
+                        <X className="w-5 h-5" />
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Filter Chips */}
+                  <div className="flex items-center gap-2 overflow-x-auto pb-1">
+                    <button
+                      onClick={() => setSearchTypeFilter('all')}
+                      className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${
+                        searchTypeFilter === 'all'
+                          ? 'bg-white text-black shadow-lg'
+                          : 'bg-white/5 border border-white/10 text-zinc-400 hover:text-white hover:bg-white/10'
+                      }`}
+                    >
+                      All Results
+                    </button>
+                    <button
+                      onClick={() => setSearchTypeFilter('movie')}
+                      className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${
+                        searchTypeFilter === 'movie'
+                          ? 'bg-white text-black shadow-lg'
+                          : 'bg-white/5 border border-white/10 text-zinc-400 hover:text-white hover:bg-white/10'
+                      }`}
+                    >
+                      Movies
+                    </button>
+                    <button
+                      onClick={() => setSearchTypeFilter('tv')}
+                      className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${
+                        searchTypeFilter === 'tv'
+                          ? 'bg-white text-black shadow-lg'
+                          : 'bg-white/5 border border-white/10 text-zinc-400 hover:text-white hover:bg-white/10'
+                      }`}
+                    >
+                      TV Shows
+                    </button>
+                  </div>
                 </div>
-                <p className="text-zinc-400 text-xs sm:text-sm mt-1">
-                  Explore titles matching your search query.
-                </p>
-              </div>
 
-              {/* Filter Tabs for Search */}
-              <div className="flex items-center gap-2 bg-zinc-900/90 p-1.5 rounded-2xl border border-zinc-800/80 backdrop-blur-md self-start sm:self-auto">
-                <button
-                  onClick={() => setSearchTypeFilter('all')}
-                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                    searchTypeFilter === 'all'
-                      ? 'bg-[#E50914] text-white shadow-lg shadow-red-900/40'
-                      : 'text-zinc-400 hover:text-white'
-                  }`}
-                >
-                  All ({searchResults.length})
-                </button>
-                <button
-                  onClick={() => setSearchTypeFilter('movie')}
-                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                    searchTypeFilter === 'movie'
-                      ? 'bg-[#E50914] text-white shadow-lg shadow-red-900/40'
-                      : 'text-zinc-400 hover:text-white'
-                  }`}
-                >
-                  Movies ({searchResults.filter((i) => (i.media_type || (i.title ? 'movie' : 'tv')) === 'movie').length})
-                </button>
-                <button
-                  onClick={() => setSearchTypeFilter('tv')}
-                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                    searchTypeFilter === 'tv'
-                      ? 'bg-[#E50914] text-white shadow-lg shadow-red-900/40'
-                      : 'text-zinc-400 hover:text-white'
-                  }`}
-                >
-                  TV Shows ({searchResults.filter((i) => (i.media_type || (i.title ? 'movie' : 'tv')) === 'tv').length})
-                </button>
-              </div>
-            </div>
+                {/* Popular Search Tags */}
+                {!searchQuery && (
+                  <div className="max-w-3xl mx-auto space-y-3">
+                    <div className="text-xs font-extrabold uppercase tracking-wider text-zinc-400">
+                      Trending Search Ideas:
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {[
+                        'Breaking Bad',
+                        'Stranger Things',
+                        'Marvel',
+                        'Anime',
+                        'Oppenheimer',
+                        'Action',
+                        'The Batman',
+                        'Sci-Fi Thrillers',
+                      ].map((tag) => (
+                        <button
+                          key={tag}
+                          onClick={() => setSearchQuery(tag)}
+                          className="px-3.5 py-1.5 bg-zinc-900 hover:bg-zinc-800 border border-white/10 rounded-full text-xs text-zinc-300 hover:text-white font-medium transition-all"
+                        >
+                          {tag}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
-            {searchResults.length === 0 ? (
-              <div className="py-20 text-center space-y-3 bg-zinc-900/30 rounded-3xl border border-zinc-800/50 my-6">
-                <p className="text-zinc-400 text-base font-medium">
-                  No titles found matching <span className="text-white font-bold">"{searchQuery}"</span>.
-                </p>
-                <p className="text-zinc-500 text-xs">
-                  Try searching for another movie, TV show, actor, or genre.
-                </p>
-              </div>
-            ) : (
-              (() => {
-                const displayed = searchResults.filter((item) => {
-                  if (searchTypeFilter === 'all') return true;
-                  const type = item.media_type || (item.title ? 'movie' : 'tv');
-                  return type === searchTypeFilter;
-                });
+                {/* Search Results OR Popular Discoveries */}
+                {searchQuery.trim() ? (
+                  <div>
+                    <div className="flex items-center justify-between border-b border-white/10 pb-4 mb-6">
+                      <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+                        Results for <span className="underline">"{searchQuery}"</span>
+                      </h2>
+                      <span className="text-xs font-bold text-zinc-400 bg-white/10 px-3 py-1 rounded-full border border-white/10">
+                        {searchResults.length} Titles
+                      </span>
+                    </div>
 
-                if (displayed.length === 0) {
-                  return (
-                    <div className="py-16 text-center space-y-2 bg-zinc-900/30 rounded-3xl border border-zinc-800/50">
-                      <p className="text-zinc-400 text-sm">
-                        No {searchTypeFilter === 'movie' ? 'movies' : 'TV shows'} found for "{searchQuery}".
+                    {searchResults.length === 0 ? (
+                      <div className="py-20 text-center space-y-3 bg-zinc-900/30 rounded-3xl border border-white/10 my-6 max-w-xl mx-auto">
+                        <p className="text-zinc-400 text-base font-medium">
+                          No titles found matching <span className="text-white font-bold">"{searchQuery}"</span>.
+                        </p>
+                      </div>
+                    ) : (
+                      (() => {
+                        const displayed = searchResults.filter((item) => {
+                          if (searchTypeFilter === 'all') return true;
+                          const type = item.media_type || (item.title ? 'movie' : 'tv');
+                          return type === searchTypeFilter;
+                        });
+
+                        return (
+                          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 sm:gap-8 pb-20">
+                            {displayed.map((item) => (
+                              <MovieCard
+                                key={item.id}
+                                item={item}
+                                fullWidth={true}
+                                onPlay={handlePlayMedia}
+                                onMoreInfo={handleMoreInfo}
+                                isSaved={watchlist.some((w) => w.id === item.id)}
+                                onToggleWatchlist={handleToggleWatchlist}
+                              />
+                            ))}
+                          </div>
+                        );
+                      })()
+                    )}
+                  </div>
+                ) : (
+                  <div className="space-y-6 pt-2">
+                    <div className="flex items-center justify-between border-b border-white/10 pb-4">
+                      <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight uppercase">
+                        Popular Discoveries
+                      </h2>
+                    </div>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 sm:gap-8 pb-16">
+                      {heroItems.slice(0, 10).map((item) => (
+                        <MovieCard
+                          key={item.id}
+                          item={item}
+                          fullWidth={true}
+                          onPlay={handlePlayMedia}
+                          onMoreInfo={handleMoreInfo}
+                          isSaved={watchlist.some((w) => w.id === item.id)}
+                          onToggleWatchlist={handleToggleWatchlist}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ==================== 2. HOME TAB ==================== */}
+            {activeTab === 'home' && (
+              <>
+                {heroItems.length > 0 && (
+                  <HeroBannerDisney
+                    items={heroItems}
+                    onPlay={handlePlayMedia}
+                    onMoreInfo={handleMoreInfo}
+                    watchlist={watchlist}
+                    onToggleWatchlist={handleToggleWatchlist}
+                  />
+                )}
+
+                <div className="space-y-8 px-2 sm:px-6 pt-4">
+                  <StreamingProvidersBar
+                    selectedProviderId={selectedProviderId}
+                    onSelectProvider={(id) => setSelectedProviderId(id)}
+                  />
+
+                  <GenreNavigationBar
+                    selectedGenreId={selectedGenreOption?.id ?? null}
+                    onSelectGenre={(genre) => {
+                      setSelectedGenreOption(genre.id === null ? null : genre);
+                    }}
+                  />
+
+                  {/* Filtered by Genre */}
+                  {selectedGenreOption && selectedGenreOption.id !== null && (
+                    <div className="space-y-6 my-4">
+                      {genreMovies.length > 0 && (
+                        <MediaRow
+                          title={`${selectedGenreOption.name} Movies`}
+                          items={genreMovies}
+                          onPlay={handlePlayMedia}
+                          onMoreInfo={handleMoreInfo}
+                          icon={selectedGenreOption.icon}
+                          watchlist={watchlist}
+                          onToggleWatchlist={handleToggleWatchlist}
+                        />
+                      )}
+                      {genreTvShows.length > 0 && (
+                        <MediaRow
+                          title={`${selectedGenreOption.name} TV Shows & Series`}
+                          items={genreTvShows}
+                          onPlay={handlePlayMedia}
+                          onMoreInfo={handleMoreInfo}
+                          icon={selectedGenreOption.icon}
+                          watchlist={watchlist}
+                          onToggleWatchlist={handleToggleWatchlist}
+                        />
+                      )}
+                    </div>
+                  )}
+
+                  {/* Filtered by Streaming Provider */}
+                  {selectedProviderId && providerMovies.length > 0 && (
+                    <MediaRow
+                      title={`Top Titles on ${selectedProviderName}`}
+                      items={providerMovies}
+                      onPlay={handlePlayMedia}
+                      onMoreInfo={handleMoreInfo}
+                      icon={<Sparkles className="w-6 h-6 text-white" />}
+                      watchlist={watchlist}
+                      onToggleWatchlist={handleToggleWatchlist}
+                    />
+                  )}
+
+                  {/* Home Rows */}
+                  <MediaRow
+                    title="TV FOR YOU"
+                    items={topTv}
+                    onPlay={handlePlayMedia}
+                    onMoreInfo={handleMoreInfo}
+                    icon={<Tv className="w-5 h-5 text-white" />}
+                    watchlist={watchlist}
+                    onToggleWatchlist={handleToggleWatchlist}
+                  />
+                  <MediaRow
+                    title="MOVIES FOR YOU"
+                    items={popularMovies}
+                    onPlay={handlePlayMedia}
+                    onMoreInfo={handleMoreInfo}
+                    icon={<Film className="w-5 h-5 text-white" />}
+                    watchlist={watchlist}
+                    onToggleWatchlist={handleToggleWatchlist}
+                  />
+                  <MediaRow
+                    title="POPULAR ACTION"
+                    items={actionMovies}
+                    onPlay={handlePlayMedia}
+                    onMoreInfo={handleMoreInfo}
+                    icon={<Clapperboard className="w-5 h-5 text-white" />}
+                    watchlist={watchlist}
+                    onToggleWatchlist={handleToggleWatchlist}
+                  />
+                  <MediaRow
+                    title="ANIMATED & ANIME"
+                    items={animeShows}
+                    onPlay={handlePlayMedia}
+                    onMoreInfo={handleMoreInfo}
+                    icon={<Flame className="w-5 h-5 text-white" />}
+                    watchlist={watchlist}
+                    onToggleWatchlist={handleToggleWatchlist}
+                  />
+                </div>
+              </>
+            )}
+
+            {/* ==================== 3. TV SHOWS HUB TAB ==================== */}
+            {activeTab === 'tv' && (
+              <div className="space-y-8">
+                {/* TV Shows Featured Banner */}
+                {topTv.length > 0 && (
+                  <HeroBannerDisney
+                    items={topTv}
+                    onPlay={handlePlayMedia}
+                    onMoreInfo={handleMoreInfo}
+                    watchlist={watchlist}
+                    onToggleWatchlist={handleToggleWatchlist}
+                  />
+                )}
+
+                <div className="px-4 sm:px-12 space-y-8">
+                  {/* Dedicated TV Shows Sub-Header */}
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/10 pb-5">
+                    <div>
+                      <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight uppercase flex items-center gap-3">
+                        <Tv2 className="w-7 h-7 text-white" />
+                        TV Series Hub
+                      </h1>
+                      <p className="text-xs sm:text-sm text-zinc-400 mt-1 font-medium">
+                        Explore binge-worthy series, dramas, sitcoms, and docuseries
                       </p>
                     </div>
-                  );
-                }
 
-                return (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 sm:gap-8 lg:gap-10 pb-20">
-                    {displayed.map((item) => (
+                    {/* TV Category Quick Chips */}
+                    <div className="flex items-center gap-2 overflow-x-auto pb-1">
+                      {[
+                        { id: 'all', label: 'All Series' },
+                        { id: 'drama', label: 'Dramas' },
+                        { id: 'comedy', label: 'Comedies' },
+                        { id: 'scifi', label: 'Sci-Fi & Fantasy' },
+                        { id: 'crime', label: 'Crime & Mystery' },
+                        { id: 'anime', label: 'Anime' },
+                      ].map((cat) => (
+                        <button
+                          key={cat.id}
+                          onClick={() => setTvGenreFilter(cat.id)}
+                          className={`px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-all whitespace-nowrap ${
+                            tvGenreFilter === cat.id
+                              ? 'bg-white text-black shadow-lg font-extrabold scale-105'
+                              : 'bg-white/5 border border-white/10 text-zinc-300 hover:text-white hover:bg-white/10'
+                          }`}
+                        >
+                          {cat.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Filtered or Full TV Rows */}
+                  {tvGenreFilter === 'all' && (
+                    <div className="space-y-8">
+                      <MediaRow
+                        title="BINGE-WORTHY TV SERIES"
+                        items={topTv}
+                        onPlay={handlePlayMedia}
+                        onMoreInfo={handleMoreInfo}
+                        icon={<Tv className="w-5 h-5 text-white" />}
+                        watchlist={watchlist}
+                        onToggleWatchlist={handleToggleWatchlist}
+                      />
+                      <MediaRow
+                        title="HIT DRAMA SERIES"
+                        items={tvDramas}
+                        onPlay={handlePlayMedia}
+                        onMoreInfo={handleMoreInfo}
+                        icon={<Star className="w-5 h-5 text-white" />}
+                        watchlist={watchlist}
+                        onToggleWatchlist={handleToggleWatchlist}
+                      />
+                      <MediaRow
+                        title="SITCOMS & COMEDIES"
+                        items={tvComedies}
+                        onPlay={handlePlayMedia}
+                        onMoreInfo={handleMoreInfo}
+                        icon={<Sparkles className="w-5 h-5 text-white" />}
+                        watchlist={watchlist}
+                        onToggleWatchlist={handleToggleWatchlist}
+                      />
+                      <MediaRow
+                        title="SCI-FI & FANTASY SAGA"
+                        items={tvSciFi}
+                        onPlay={handlePlayMedia}
+                        onMoreInfo={handleMoreInfo}
+                        icon={<Zap className="w-5 h-5 text-white" />}
+                        watchlist={watchlist}
+                        onToggleWatchlist={handleToggleWatchlist}
+                      />
+                      <MediaRow
+                        title="CRIME & MYSTERY"
+                        items={tvCrime}
+                        onPlay={handlePlayMedia}
+                        onMoreInfo={handleMoreInfo}
+                        icon={<Clapperboard className="w-5 h-5 text-white" />}
+                        watchlist={watchlist}
+                        onToggleWatchlist={handleToggleWatchlist}
+                      />
+                      <MediaRow
+                        title="ANIMATED SERIES & ANIME"
+                        items={animeShows}
+                        onPlay={handlePlayMedia}
+                        onMoreInfo={handleMoreInfo}
+                        icon={<Flame className="w-5 h-5 text-white" />}
+                        watchlist={watchlist}
+                        onToggleWatchlist={handleToggleWatchlist}
+                      />
+                    </div>
+                  )}
+
+                  {/* Filtered Category Grid */}
+                  {tvGenreFilter !== 'all' && (
+                    <div className="pt-2">
+                      <h2 className="text-xl font-extrabold uppercase text-white mb-6">
+                        {tvGenreFilter.toUpperCase()} TV SHOWS
+                      </h2>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 sm:gap-8 pb-16">
+                        {(tvGenreFilter === 'drama'
+                          ? tvDramas
+                          : tvGenreFilter === 'comedy'
+                          ? tvComedies
+                          : tvGenreFilter === 'scifi'
+                          ? tvSciFi
+                          : tvGenreFilter === 'crime'
+                          ? tvCrime
+                          : animeShows
+                        ).map((item) => (
+                          <MovieCard
+                            key={item.id}
+                            item={item}
+                            fullWidth={true}
+                            onPlay={handlePlayMedia}
+                            onMoreInfo={handleMoreInfo}
+                            isSaved={watchlist.some((w) => w.id === item.id)}
+                            onToggleWatchlist={handleToggleWatchlist}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* ==================== 4. MOVIES HUB TAB ==================== */}
+            {activeTab === 'movie' && (
+              <div className="space-y-8">
+                {/* Movies Featured Banner */}
+                {popularMovies.length > 0 && (
+                  <HeroBannerDisney
+                    items={popularMovies}
+                    onPlay={handlePlayMedia}
+                    onMoreInfo={handleMoreInfo}
+                    watchlist={watchlist}
+                    onToggleWatchlist={handleToggleWatchlist}
+                  />
+                )}
+
+                <div className="px-4 sm:px-12 space-y-8">
+                  {/* Dedicated Movies Sub-Header */}
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/10 pb-5">
+                    <div>
+                      <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight uppercase flex items-center gap-3">
+                        <Film className="w-7 h-7 text-white" />
+                        Feature Films Hub
+                      </h1>
+                      <p className="text-xs sm:text-sm text-zinc-400 mt-1 font-medium">
+                        Blockbusters, critically acclaimed masterpieces, action, and comedies
+                      </p>
+                    </div>
+
+                    {/* Movie Category Quick Chips */}
+                    <div className="flex items-center gap-2 overflow-x-auto pb-1">
+                      {[
+                        { id: 'all', label: 'All Movies' },
+                        { id: 'action', label: 'Action' },
+                        { id: 'top_rated', label: 'Top Rated' },
+                        { id: 'scifi', label: 'Sci-Fi' },
+                        { id: 'horror', label: 'Horror' },
+                        { id: 'comedy', label: 'Comedy' },
+                      ].map((cat) => (
+                        <button
+                          key={cat.id}
+                          onClick={() => setMovieGenreFilter(cat.id)}
+                          className={`px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-all whitespace-nowrap ${
+                            movieGenreFilter === cat.id
+                              ? 'bg-white text-black shadow-lg font-extrabold scale-105'
+                              : 'bg-white/5 border border-white/10 text-zinc-300 hover:text-white hover:bg-white/10'
+                          }`}
+                        >
+                          {cat.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Filtered or Full Movie Rows */}
+                  {movieGenreFilter === 'all' && (
+                    <div className="space-y-8">
+                      <MediaRow
+                        title="BLOCKBUSTER MOVIES"
+                        items={popularMovies}
+                        onPlay={handlePlayMedia}
+                        onMoreInfo={handleMoreInfo}
+                        icon={<Film className="w-5 h-5 text-white" />}
+                        watchlist={watchlist}
+                        onToggleWatchlist={handleToggleWatchlist}
+                      />
+                      <MediaRow
+                        title="TOP RATED MASTERPIECES"
+                        items={topRatedMovies}
+                        onPlay={handlePlayMedia}
+                        onMoreInfo={handleMoreInfo}
+                        icon={<Star className="w-5 h-5 text-white" />}
+                        watchlist={watchlist}
+                        onToggleWatchlist={handleToggleWatchlist}
+                      />
+                      <MediaRow
+                        title="BLOCKBUSTER ACTION & ADVENTURE"
+                        items={actionMovies}
+                        onPlay={handlePlayMedia}
+                        onMoreInfo={handleMoreInfo}
+                        icon={<Flame className="w-5 h-5 text-white" />}
+                        watchlist={watchlist}
+                        onToggleWatchlist={handleToggleWatchlist}
+                      />
+                      <MediaRow
+                        title="SCI-FI & FUTURISTIC THRILLERS"
+                        items={sciFiMovies}
+                        onPlay={handlePlayMedia}
+                        onMoreInfo={handleMoreInfo}
+                        icon={<Zap className="w-5 h-5 text-white" />}
+                        watchlist={watchlist}
+                        onToggleWatchlist={handleToggleWatchlist}
+                      />
+                      <MediaRow
+                        title="HORROR & SUSPENSE"
+                        items={horrorMovies}
+                        onPlay={handlePlayMedia}
+                        onMoreInfo={handleMoreInfo}
+                        icon={<Clapperboard className="w-5 h-5 text-white" />}
+                        watchlist={watchlist}
+                        onToggleWatchlist={handleToggleWatchlist}
+                      />
+                      <MediaRow
+                        title="LAUGH-OUT-LOUD COMEDIES"
+                        items={comedyMovies}
+                        onPlay={handlePlayMedia}
+                        onMoreInfo={handleMoreInfo}
+                        icon={<Sparkles className="w-5 h-5 text-white" />}
+                        watchlist={watchlist}
+                        onToggleWatchlist={handleToggleWatchlist}
+                      />
+                    </div>
+                  )}
+
+                  {/* Filtered Category Grid */}
+                  {movieGenreFilter !== 'all' && (
+                    <div className="pt-2">
+                      <h2 className="text-xl font-extrabold uppercase text-white mb-6">
+                        {movieGenreFilter.toUpperCase()} MOVIES
+                      </h2>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 sm:gap-8 pb-16">
+                        {(movieGenreFilter === 'action'
+                          ? actionMovies
+                          : movieGenreFilter === 'top_rated'
+                          ? topRatedMovies
+                          : movieGenreFilter === 'scifi'
+                          ? sciFiMovies
+                          : movieGenreFilter === 'horror'
+                          ? horrorMovies
+                          : comedyMovies
+                        ).map((item) => (
+                          <MovieCard
+                            key={item.id}
+                            item={item}
+                            fullWidth={true}
+                            onPlay={handlePlayMedia}
+                            onMoreInfo={handleMoreInfo}
+                            isSaved={watchlist.some((w) => w.id === item.id)}
+                            onToggleWatchlist={handleToggleWatchlist}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* ==================== 5. MY STUFF (WATCHLIST) TAB ==================== */}
+            {activeTab === 'watchlist' && (
+              <div className="pt-28 px-6 sm:px-12 max-w-7xl mx-auto space-y-8 min-h-[75vh]">
+                {/* Header */}
+                <div className="border-b border-white/10 pb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div>
+                    <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight uppercase flex items-center gap-3">
+                      <Bookmark className="w-8 h-8 text-white fill-white" />
+                      My Stuff
+                    </h1>
+                    <p className="text-sm text-zinc-400 mt-1 font-medium">
+                      Your saved movies and TV series library
+                    </p>
+                  </div>
+
+                  {/* Watchlist Filter Tabs */}
+                  <div className="flex items-center gap-2 bg-zinc-900/90 p-1.5 rounded-2xl border border-white/10">
+                    <button
+                      onClick={() => setWatchlistFilter('all')}
+                      className={`px-4 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                        watchlistFilter === 'all'
+                          ? 'bg-white text-black shadow-md'
+                          : 'text-zinc-400 hover:text-white'
+                      }`}
+                    >
+                      All ({watchlist.length})
+                    </button>
+                    <button
+                      onClick={() => setWatchlistFilter('movie')}
+                      className={`px-4 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                        watchlistFilter === 'movie'
+                          ? 'bg-white text-black shadow-md'
+                          : 'text-zinc-400 hover:text-white'
+                      }`}
+                    >
+                      Movies ({watchlist.filter((i) => (i.media_type || (i.title ? 'movie' : 'tv')) === 'movie').length})
+                    </button>
+                    <button
+                      onClick={() => setWatchlistFilter('tv')}
+                      className={`px-4 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                        watchlistFilter === 'tv'
+                          ? 'bg-white text-black shadow-md'
+                          : 'text-zinc-400 hover:text-white'
+                      }`}
+                    >
+                      TV Shows ({watchlist.filter((i) => (i.media_type || (i.title ? 'movie' : 'tv')) === 'tv').length})
+                    </button>
+                  </div>
+                </div>
+
+                {filteredWatchlist.length === 0 ? (
+                  <div className="py-20 px-6 text-center space-y-5 bg-zinc-900/40 rounded-3xl border border-white/10 my-8 max-w-2xl mx-auto flex flex-col items-center">
+                    <div className="w-16 h-16 rounded-full bg-zinc-800/80 border border-white/10 flex items-center justify-center text-zinc-400">
+                      <Bookmark className="w-8 h-8" />
+                    </div>
+                    <h2 className="text-2xl font-black text-white">Your Library is Empty</h2>
+                    <p className="text-zinc-400 text-sm max-w-md leading-relaxed">
+                      You haven't saved any titles here yet. Click "My Stuff" on any movie or TV show to save it to your personal watchlist!
+                    </p>
+                    <button
+                      onClick={() => setActiveTab('home')}
+                      className="bg-white hover:bg-zinc-200 text-black font-extrabold text-xs sm:text-sm px-8 py-3 rounded-md transition-all uppercase tracking-wider shadow-lg transform hover:scale-105"
+                    >
+                      Browse Movies & TV Shows
+                    </button>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 sm:gap-8 pb-20">
+                    {filteredWatchlist.map((item) => (
                       <MovieCard
                         key={item.id}
                         item={item}
                         fullWidth={true}
                         onPlay={handlePlayMedia}
                         onMoreInfo={handleMoreInfo}
+                        isSaved={true}
+                        onToggleWatchlist={handleToggleWatchlist}
                       />
                     ))}
                   </div>
-                );
-              })()
-            )}
-          </div>
-        ) : (
-          <>
-            {/* Disney+ Style Spotlight Banner */}
-            {activeCategory === 'home' && trending.length > 0 && (
-              <MyListSpotlight
-                items={trending}
-                onPlay={handlePlayMedia}
-                onMoreInfo={handleMoreInfo}
-              />
-            )}
-
-            {/* STREAMING PROVIDERS BRAND HUBS (Disney+ Brand Hub style) */}
-            <StreamingProvidersBar
-              selectedProviderId={selectedProviderId}
-              onSelectProvider={setSelectedProviderId}
-            />
-
-            {/* GENRE NAVIGATION BAR BELOW STREAMING PROVIDERS BAR */}
-            <GenreNavigationBar
-              selectedGenreId={selectedGenreOption?.id ?? null}
-              onSelectGenre={(genre) => {
-                if (genre.id === null) {
-                  setSelectedGenreOption(null);
-                } else {
-                  setSelectedGenreOption(genre);
-                }
-              }}
-            />
-
-            {/* GENRE FILTERED ROWS */}
-            {selectedGenreOption && selectedGenreOption.id !== null && (
-              <div className="space-y-4 my-4">
-                {genreMovies.length > 0 && (
-                  <MediaRow
-                    title={`${selectedGenreOption.name} Movies`}
-                    items={genreMovies}
-                    onPlay={handlePlayMedia}
-                    onMoreInfo={handleMoreInfo}
-                    icon={selectedGenreOption.icon}
-                  />
-                )}
-                {genreTvShows.length > 0 && (
-                  <MediaRow
-                    title={`${selectedGenreOption.name} TV Shows & Series`}
-                    items={genreTvShows}
-                    onPlay={handlePlayMedia}
-                    onMoreInfo={handleMoreInfo}
-                    icon={selectedGenreOption.icon}
-                  />
                 )}
               </div>
             )}
-
-            {/* PROVIDER FILTERED ROW */}
-            {selectedProviderId && providerMovies.length > 0 && (
-              <MediaRow
-                title={`Top Titles on ${selectedProviderName}`}
-                items={providerMovies}
-                onPlay={handlePlayMedia}
-                onMoreInfo={handleMoreInfo}
-                icon={<Sparkles className="w-6 h-6 text-[#E50914]" />}
-              />
-            )}
-
-            {/* CATEGORY & GENRE ROWS */}
-            {activeCategory === 'home' && (
-              <>
-                <MediaRow
-                  title="Trending Now"
-                  items={trending}
-                  onPlay={handlePlayMedia}
-                  onMoreInfo={handleMoreInfo}
-                  icon={<Flame className="w-6 h-6 text-[#E50914]" />}
-                />
-                <MediaRow
-                  title="Popular Movies"
-                  items={popularMovies}
-                  onPlay={handlePlayMedia}
-                  onMoreInfo={handleMoreInfo}
-                  icon={<Film className="w-6 h-6 text-[#E50914]" />}
-                />
-                <MediaRow
-                  title="Top TV Series"
-                  items={topTv}
-                  onPlay={handlePlayMedia}
-                  onMoreInfo={handleMoreInfo}
-                  icon={<Tv className="w-6 h-6 text-[#E50914]" />}
-                />
-                <MediaRow
-                  title="Action & Blockbusters"
-                  items={actionMovies}
-                  onPlay={handlePlayMedia}
-                  onMoreInfo={handleMoreInfo}
-                  icon={<Clapperboard className="w-6 h-6 text-[#E50914]" />}
-                />
-                <MediaRow
-                  title="Anime & Animation"
-                  items={animeShows}
-                  onPlay={handlePlayMedia}
-                  onMoreInfo={handleMoreInfo}
-                  icon={<Sparkles className="w-6 h-6 text-[#E50914]" />}
-                />
-              </>
-            )}
-
-            {activeCategory === 'movie' && (
-              <>
-                <MediaRow
-                  title="Popular Movies"
-                  items={popularMovies}
-                  onPlay={handlePlayMedia}
-                  onMoreInfo={handleMoreInfo}
-                  icon={<Film className="w-6 h-6 text-[#E50914]" />}
-                />
-                <MediaRow
-                  title="Action Thrillers"
-                  items={actionMovies}
-                  onPlay={handlePlayMedia}
-                  onMoreInfo={handleMoreInfo}
-                  icon={<Flame className="w-6 h-6 text-[#E50914]" />}
-                />
-              </>
-            )}
-
-            {activeCategory === 'tv' && (
-              <>
-                <MediaRow
-                  title="Top TV Series"
-                  items={topTv}
-                  onPlay={handlePlayMedia}
-                  onMoreInfo={handleMoreInfo}
-                  icon={<Tv className="w-6 h-6 text-[#E50914]" />}
-                />
-                <MediaRow
-                  title="Anime & Animated Hits"
-                  items={animeShows}
-                  onPlay={handlePlayMedia}
-                  onMoreInfo={handleMoreInfo}
-                  icon={<Sparkles className="w-6 h-6 text-[#E50914]" />}
-                />
-              </>
-            )}
-
-            {activeCategory === 'trending' && (
-              <MediaRow
-                title="Weekly Top Trending"
-                items={trending}
-                onPlay={handlePlayMedia}
-                onMoreInfo={handleMoreInfo}
-                icon={<TrendingUp className="w-6 h-6 text-[#E50914]" />}
-              />
-            )}
-          </>
-        )}
+          </motion.div>
+        </AnimatePresence>
       </main>
 
       {/* STREAMING PLAYER MODAL */}
@@ -470,12 +987,14 @@ export default function App() {
           item={detailMedia}
           onClose={() => setDetailMedia(null)}
           onPlay={handlePlayMedia}
+          watchlist={watchlist}
+          onToggleWatchlist={handleToggleWatchlist}
         />
       )}
 
       {/* Footer */}
-      <footer className="mt-20 border-t border-zinc-800/80 pt-12 pb-8 text-center text-xs text-zinc-500 space-y-3 relative z-10">
-        <div className="font-sans font-black text-2xl text-[#E50914] tracking-widest drop-shadow-[0_2px_12px_rgba(229,9,20,0.6)]">FREEFLIX</div>
+      <footer className="mt-20 border-t border-zinc-800/80 pt-12 pb-8 text-center text-xs text-zinc-500 space-y-3 relative z-10 px-6">
+        <div className="font-sans font-black text-2xl text-white tracking-widest uppercase drop-shadow-md">FREEFLIX</div>
         <p>© 2026 FREEFLIX. Stream your favorite movies and TV shows for free.</p>
         <p className="text-[10px] text-zinc-600 max-w-xl mx-auto px-4">
           Disclaimer: FREEFLIX does not host any media files on its servers. All videos are embedded from third-party streaming providers.

@@ -37,10 +37,10 @@ export const MyListSpotlight: React.FC<MyListSpotlightProps> = ({ items, onPlay,
 
   return (
     <div className="pt-24 sm:pt-28 pb-8 px-4 sm:px-8 max-w-[1440px] mx-auto select-none space-y-6">
-      {/* Featured Spotlight Showcase Box - Disney+ Style Ambient Glow & Rounded 3D Floating Frame */}
+      {/* Featured Spotlight Showcase Box - Floating Frame */}
       <div className="relative rounded-3xl overflow-hidden border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.9)] bg-gradient-to-r from-zinc-950 via-zinc-900 to-black group">
-        {/* Ambient Red Blur Background Glow */}
-        <div className="absolute -inset-1 bg-gradient-to-r from-red-600/30 via-red-950/20 to-transparent blur-3xl opacity-60 pointer-events-none" />
+        {/* Ambient Blur Background Glow */}
+        <div className="absolute -inset-1 bg-gradient-to-r from-white/10 via-zinc-800/20 to-transparent blur-3xl opacity-60 pointer-events-none" />
 
         {/* Backdrop Image with Radial & Gradient Fades */}
         <div className="relative h-[380px] sm:h-[460px] md:h-[520px] w-full overflow-hidden">
@@ -55,16 +55,16 @@ export const MyListSpotlight: React.FC<MyListSpotlightProps> = ({ items, onPlay,
 
           {/* Hero Content Overlay */}
           <div className="absolute bottom-0 left-0 right-0 p-6 sm:p-10 md:p-12 max-w-2xl space-y-4 z-20">
-            {/* Red Badge Indicator */}
+            {/* White Badge Indicator */}
             <div className="flex items-center gap-2">
-              <span className="bg-[#E50914] text-white text-[10px] sm:text-xs font-black uppercase px-2.5 py-0.5 rounded-full tracking-wider shadow-[0_0_12px_#E50914]">
+              <span className="bg-white text-black text-[10px] sm:text-xs font-black uppercase px-2.5 py-0.5 rounded-full tracking-wider shadow-md">
                 {isTv ? 'SERIES SPOTLIGHT' : 'FEATURED MOVIE'}
               </span>
-              <span className="text-xs font-bold text-zinc-400 bg-black/60 px-2 py-0.5 rounded-md border border-white/10 backdrop-blur-md">
+              <span className="text-xs font-bold text-zinc-300 bg-black/60 px-2 py-0.5 rounded-md border border-white/10 backdrop-blur-md">
                 {certification}
               </span>
-              <div className="flex items-center gap-1 text-yellow-400 text-xs font-bold bg-black/60 px-2 py-0.5 rounded-md border border-white/10 backdrop-blur-md">
-                <Star className="w-3.5 h-3.5 fill-yellow-400 stroke-none" />
+              <div className="flex items-center gap-1 text-white text-xs font-bold bg-black/60 px-2 py-0.5 rounded-md border border-white/10 backdrop-blur-md">
+                <Star className="w-3.5 h-3.5 fill-white stroke-none" />
                 <span>{focusedItem.vote_average?.toFixed(1) || '8.5'}</span>
               </div>
             </div>
@@ -76,7 +76,7 @@ export const MyListSpotlight: React.FC<MyListSpotlightProps> = ({ items, onPlay,
 
             {/* Tags & Year */}
             <div className="flex items-center gap-2 text-xs sm:text-sm font-semibold text-zinc-300">
-              <span className="text-red-400 font-bold">{isTv ? 'Trending Series' : 'Blockbuster'}</span>
+              <span className="text-white font-bold">{isTv ? 'Trending Series' : 'Blockbuster'}</span>
               <span className="text-zinc-600">•</span>
               <span>{year}</span>
               <span className="text-zinc-600">•</span>
@@ -88,13 +88,13 @@ export const MyListSpotlight: React.FC<MyListSpotlightProps> = ({ items, onPlay,
               {focusedItem.overview || 'Explore this acclaimed title now streaming in HD on FreeFlix.'}
             </p>
 
-            {/* Shiny Disney+ Style Action Buttons */}
+            {/* Action Buttons */}
             <div className="flex items-center gap-3 pt-2">
               <button
                 onClick={() => onPlay(focusedItem)}
-                className="flex items-center justify-center gap-2.5 bg-[#E50914] hover:bg-red-600 text-white font-extrabold text-xs sm:text-sm px-6 py-3 rounded-2xl transition-all transform hover:scale-105 shadow-[0_8px_25px_rgba(229,9,20,0.5)] border border-red-500/50"
+                className="flex items-center justify-center gap-2.5 bg-white hover:bg-zinc-200 text-black font-extrabold text-xs sm:text-sm px-6 py-3 rounded-2xl transition-all transform hover:scale-105 shadow-xl border border-white"
               >
-                <Play className="w-4 h-4 fill-white" />
+                <Play className="w-4 h-4 fill-black text-black" />
                 STREAM NOW
               </button>
               <button
@@ -106,20 +106,20 @@ export const MyListSpotlight: React.FC<MyListSpotlightProps> = ({ items, onPlay,
               </button>
               <button
                 onClick={() => setIsWatchlisted(!isWatchlisted)}
-                className="p-3 rounded-2xl bg-zinc-900/90 border border-white/20 text-white hover:border-red-500/80 transition-all backdrop-blur-md transform hover:scale-105"
+                className="p-3 rounded-2xl bg-zinc-900/90 border border-white/20 text-white hover:border-white transition-all backdrop-blur-md transform hover:scale-105"
                 title="Watchlist"
               >
-                {isWatchlisted ? <Check className="w-4 h-4 text-emerald-400" /> : <Plus className="w-4 h-4" />}
+                {isWatchlisted ? <Check className="w-4 h-4 text-white" /> : <Plus className="w-4 h-4" />}
               </button>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Horizontal Carousel Thumbnails below Spotlight (Disney+ style selector) */}
+      {/* Horizontal Carousel Thumbnails below Spotlight */}
       <div className="space-y-2">
         <div className="flex items-center gap-2 text-xs font-black uppercase text-zinc-400 tracking-wider">
-          <Sparkles className="w-3.5 h-3.5 text-[#E50914]" />
+          <Sparkles className="w-3.5 h-3.5 text-white" />
           <span>Spotlight Selection</span>
         </div>
         <div className="flex items-center gap-3 sm:gap-4 overflow-x-auto no-scrollbar py-2">
@@ -136,7 +136,7 @@ export const MyListSpotlight: React.FC<MyListSpotlightProps> = ({ items, onPlay,
                 onClick={() => setSelectedIndex(index)}
                 className={`relative flex-shrink-0 w-28 sm:w-36 md:w-40 aspect-[16/10] rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 bg-zinc-900 border ${
                   isSelected
-                    ? 'border-2 border-[#E50914] ring-2 ring-[#E50914]/60 scale-105 shadow-[0_0_20px_rgba(229,9,20,0.5)] z-20'
+                    ? 'border-2 border-white ring-2 ring-white/60 scale-105 shadow-[0_0_20px_rgba(255,255,255,0.3)] z-20'
                     : 'border-white/10 opacity-70 hover:opacity-100 hover:scale-102 hover:border-white/30'
                 }`}
               >

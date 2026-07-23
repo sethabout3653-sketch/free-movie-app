@@ -7,14 +7,23 @@ interface DetailModalProps {
   item: MediaItem;
   onClose: () => void;
   onPlay: (item: MediaItem) => void;
+  watchlist?: MediaItem[];
+  onToggleWatchlist?: (item: MediaItem) => void;
 }
 
-export const DetailModal: React.FC<DetailModalProps> = ({ item, onClose, onPlay }) => {
+export const DetailModal: React.FC<DetailModalProps> = ({
+  item,
+  onClose,
+  onPlay,
+  watchlist = [],
+  onToggleWatchlist,
+}) => {
   const [certification, setCertification] = useState<string>('PG-13');
   const [cast, setCast] = useState<string[]>([]);
   const [genres, setGenres] = useState<string[]>([]);
   const [similar, setSimilar] = useState<MediaItem[]>([]);
-  const [isSaved, setIsSaved] = useState<boolean>(false);
+
+  const isSaved = watchlist.some((w) => w.id === item.id);
 
   const mediaType: MediaType = item.media_type || (item.title ? 'movie' : 'tv');
   const title = item.title || item.name || 'Untitled';
@@ -55,7 +64,7 @@ export const DetailModal: React.FC<DetailModalProps> = ({ item, onClose, onPlay 
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 z-20 p-2 rounded-full bg-black/70 text-white hover:bg-red-600 transition-colors"
+          className="absolute top-4 right-4 z-20 p-2 rounded-full bg-black/70 text-white hover:bg-white hover:text-black transition-colors"
         >
           <X className="w-5 h-5" />
         </button>
@@ -81,17 +90,32 @@ export const DetailModal: React.FC<DetailModalProps> = ({ item, onClose, onPlay 
                   onClose();
                   onPlay(item);
                 }}
-                className="flex items-center justify-center gap-2 bg-[#E50914] hover:bg-red-700 text-white font-extrabold text-sm sm:text-base px-6 py-2.5 rounded shadow-xl transition-transform transform hover:scale-105"
+                className="flex items-center justify-center gap-2 bg-white hover:bg-zinc-200 text-black font-extrabold text-sm sm:text-base px-6 py-2.5 rounded-full shadow-xl transition-transform transform hover:scale-105"
               >
-                <Play className="w-5 h-5 fill-white" />
+                <Play className="w-5 h-5 fill-black text-black" />
                 Play Now
               </button>
 
               <button
-                onClick={() => setIsSaved(!isSaved)}
-                className="p-2.5 rounded-full bg-black/60 border border-white/30 text-white hover:border-white transition-colors"
+                onClick={() => onToggleWatchlist?.(item)}
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-full border text-xs sm:text-sm font-bold transition-all ${
+                  isSaved
+                    ? 'bg-white/20 border-white text-white'
+                    : 'bg-black/60 border-white/30 text-white hover:border-white'
+                }`}
+                title={isSaved ? 'Remove from My List' : 'Add to My List'}
               >
-                {isSaved ? <Check className="w-5 h-5 text-green-400" /> : <Plus className="w-5 h-5" />}
+                {isSaved ? (
+                  <>
+                    <Check className="w-4 h-4 text-white" />
+                    <span>In My List</span>
+                  </>
+                ) : (
+                  <>
+                    <Plus className="w-4 h-4" />
+                    <span>Add to My List</span>
+                  </>
+                )}
               </button>
             </div>
           </div>
@@ -103,14 +127,14 @@ export const DetailModal: React.FC<DetailModalProps> = ({ item, onClose, onPlay 
             {/* Overview & Metadata */}
             <div className="md:col-span-2 space-y-4">
               <div className="flex items-center gap-3 text-xs font-semibold">
-                <span className="bg-[#E50914] text-white px-2 py-0.5 rounded uppercase font-black">
+                <span className="bg-white text-black px-2 py-0.5 rounded uppercase font-black">
                   {mediaType}
                 </span>
                 <span className="border border-white/50 text-white font-bold px-2 py-0.5 rounded">
                   {certification}
                 </span>
-                <div className="flex items-center gap-1 text-yellow-400">
-                  <Star className="w-4 h-4 fill-yellow-400 stroke-none" />
+                <div className="flex items-center gap-1 text-white">
+                  <Star className="w-4 h-4 fill-white stroke-none" />
                   <span>{item.vote_average?.toFixed(1) || '8.5'}</span>
                 </div>
                 {(item.release_date || item.first_air_date) && (
@@ -163,7 +187,7 @@ export const DetailModal: React.FC<DetailModalProps> = ({ item, onClose, onPlay 
                       onClose();
                       onPlay(sim);
                     }}
-                    className="group relative aspect-[2/3] bg-zinc-900 rounded-lg overflow-hidden cursor-pointer border border-white/5 hover:border-[#E50914] transition-all transform hover:scale-105"
+                    className="group relative aspect-[2/3] bg-zinc-900 rounded-lg overflow-hidden cursor-pointer border border-white/5 hover:border-white transition-all transform hover:scale-105"
                   >
                     <img
                       src={

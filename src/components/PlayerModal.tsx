@@ -269,14 +269,14 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({
         <div className="flex items-center gap-4 pointer-events-auto">
           <button
             onClick={onClose}
-            className="p-2 sm:p-2.5 rounded-full bg-zinc-900/80 border border-white/10 text-white hover:bg-[#E50914] hover:border-red-500 hover:scale-110 transition-all backdrop-blur-md shadow-lg"
+            className="p-2 sm:p-2.5 rounded-full bg-zinc-900/80 border border-white/10 text-white hover:bg-white hover:text-black hover:scale-110 transition-all backdrop-blur-md shadow-lg"
             title="Close player"
           >
             <X className="w-5 h-5 sm:w-6 sm:h-6" />
           </button>
           <div>
             <div className="flex items-center gap-2.5">
-              <span className="text-[10px] sm:text-xs uppercase font-extrabold text-[#E50914] bg-red-950/80 border border-red-800/50 px-2 py-0.5 rounded-md shadow-[0_0_12px_rgba(229,9,20,0.3)] tracking-wider">
+              <span className="text-[10px] sm:text-xs uppercase font-extrabold text-black bg-white px-2 py-0.5 rounded-md shadow-md tracking-wider">
                 FREEFLIX
               </span>
               <h2 className="text-sm sm:text-lg md:text-xl font-black text-white line-clamp-1 drop-shadow-md uppercase tracking-wide font-sans">
@@ -297,9 +297,9 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({
           <div className="relative">
             <button
               onClick={() => setShowServerMenu(!showServerMenu)}
-              className="flex items-center gap-2 bg-zinc-900/80 border border-white/10 hover:border-[#E50914]/80 text-white px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold shadow-xl transition-all backdrop-blur-md"
+              className="flex items-center gap-2 bg-zinc-900/80 border border-white/20 hover:border-white text-white px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold shadow-xl transition-all backdrop-blur-md"
             >
-              <Server className="w-4 h-4 text-[#E50914]" />
+              <Server className="w-4 h-4 text-white" />
               <span className="hidden sm:inline tracking-wide">{selectedServer.name}</span>
               <span className="sm:hidden tracking-wide">{selectedServer.id.toUpperCase()}</span>
               <ChevronDown className="w-4 h-4 text-zinc-400" />
@@ -321,19 +321,19 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({
                       }}
                       className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-left transition-all ${
                         isSelected
-                          ? 'bg-gradient-to-r from-[#E50914] to-red-700 text-white shadow-lg'
+                          ? 'bg-white text-black shadow-lg font-black'
                           : 'text-zinc-300 hover:bg-zinc-800 hover:text-white'
                       }`}
                     >
                       <div className="flex items-center gap-2.5">
                         <span className="tracking-wide">{server.name}</span>
                         {server.badge && (
-                          <span className="text-[9px] bg-black/50 px-1.5 py-0.5 rounded border border-white/10 font-black text-yellow-400 uppercase">
+                          <span className="text-[9px] bg-black/50 px-1.5 py-0.5 rounded border border-white/10 font-black text-white uppercase">
                             {server.badge}
                           </span>
                         )}
                       </div>
-                      {isSelected && <Check className="w-4 h-4" />}
+                      {isSelected && <Check className="w-4 h-4 text-black" />}
                     </button>
                   );
                 })}
@@ -372,7 +372,7 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({
                     setSeason(Number(e.target.value));
                     setEpisode(1);
                   }}
-                  className="bg-zinc-800/80 hover:bg-zinc-700 text-white font-bold rounded-lg px-2 py-1 sm:py-1.5 text-xs sm:text-sm focus:outline-none focus:ring-1 focus:ring-[#E50914] transition-colors cursor-pointer appearance-none outline-none border-none"
+                  className="bg-zinc-800/80 hover:bg-zinc-700 text-white font-bold rounded-lg px-2 py-1 sm:py-1.5 text-xs sm:text-sm focus:outline-none focus:ring-1 focus:ring-white transition-colors cursor-pointer appearance-none outline-none border-none"
                 >
                   {Array.from({ length: totalSeasons }, (_, i) => i + 1).map((s) => (
                     <option key={s} value={s}>
@@ -388,7 +388,7 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({
                 <select
                   value={episode}
                   onChange={(e) => setEpisode(Number(e.target.value))}
-                  className="bg-zinc-800/80 hover:bg-zinc-700 text-white font-bold rounded-lg px-2 py-1 sm:py-1.5 text-xs sm:text-sm focus:outline-none focus:ring-1 focus:ring-[#E50914] transition-colors cursor-pointer appearance-none outline-none border-none"
+                  className="bg-zinc-800/80 hover:bg-zinc-700 text-white font-bold rounded-lg px-2 py-1 sm:py-1.5 text-xs sm:text-sm focus:outline-none focus:ring-1 focus:ring-white transition-colors cursor-pointer appearance-none outline-none border-none"
                 >
                   {Array.from({ length: episodesInSeason }, (_, i) => i + 1).map((eNum) => (
                     <option key={eNum} value={eNum}>
@@ -401,10 +401,10 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({
               {/* Next Episode Button */}
               <button
                 onClick={handleNextEpisode}
-                className="flex items-center gap-2 bg-gradient-to-r from-[#E50914] to-red-700 hover:from-red-500 hover:to-red-600 text-white text-[10px] sm:text-xs font-black uppercase tracking-wider px-4 py-2 sm:py-2.5 rounded-xl transition-all shadow-lg hover:scale-105"
+                className="flex items-center gap-2 bg-white hover:bg-zinc-200 text-black text-[10px] sm:text-xs font-black uppercase tracking-wider px-4 py-2 sm:py-2.5 rounded-xl transition-all shadow-lg hover:scale-105"
               >
                 <span>Next Ep</span>
-                <SkipForward className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-white" />
+                <SkipForward className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-black text-black" />
               </button>
             </>
           )}

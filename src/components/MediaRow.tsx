@@ -10,9 +10,19 @@ interface MediaRowProps {
   onPlay: (item: MediaItem) => void;
   onMoreInfo?: (item: MediaItem) => void;
   icon?: React.ReactNode;
+  watchlist?: MediaItem[];
+  onToggleWatchlist?: (item: MediaItem) => void;
 }
 
-export const MediaRow: React.FC<MediaRowProps> = ({ title, items, onPlay, onMoreInfo, icon }) => {
+export const MediaRow: React.FC<MediaRowProps> = ({
+  title,
+  items,
+  onPlay,
+  onMoreInfo,
+  icon,
+  watchlist = [],
+  onToggleWatchlist,
+}) => {
   const rowRef = useRef<HTMLDivElement>(null);
 
   const handleScroll = (direction: 'left' | 'right') => {
@@ -35,7 +45,7 @@ export const MediaRow: React.FC<MediaRowProps> = ({ title, items, onPlay, onMore
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2.5">
-          <span className="w-1.5 h-6 bg-[#E50914] rounded-full inline-block shadow-[0_0_12px_#E50914]" />
+          <span className="w-1.5 h-6 bg-white rounded-full inline-block shadow-[0_0_12px_rgba(255,255,255,0.8)]" />
           {icon}
           <h2 className="text-lg sm:text-xl md:text-2xl font-black text-white tracking-wide uppercase font-sans">
             {title}
@@ -47,7 +57,7 @@ export const MediaRow: React.FC<MediaRowProps> = ({ title, items, onPlay, onMore
         {/* Left Arrow Scroll */}
         <button
           onClick={() => handleScroll('left')}
-          className="absolute -left-3 sm:-left-4 top-1/2 -translate-y-1/2 z-40 bg-black/80 hover:bg-[#E50914] text-white p-2 sm:p-2.5 rounded-full opacity-0 group-hover/row:opacity-100 transition-all duration-300 backdrop-blur-md border border-white/20 shadow-2xl transform hover:scale-110"
+          className="absolute -left-3 sm:-left-4 top-1/2 -translate-y-1/2 z-40 bg-black/80 hover:bg-white hover:text-black text-white p-2 sm:p-2.5 rounded-full opacity-0 group-hover/row:opacity-100 transition-all duration-300 backdrop-blur-md border border-white/20 shadow-2xl transform hover:scale-110"
           aria-label="Scroll left"
         >
           <ChevronLeft className="w-6 h-6 sm:w-7 sm:h-7" />
@@ -64,6 +74,8 @@ export const MediaRow: React.FC<MediaRowProps> = ({ title, items, onPlay, onMore
               item={item}
               onPlay={onPlay}
               onMoreInfo={onMoreInfo}
+              isSaved={watchlist.some((w) => w.id === item.id)}
+              onToggleWatchlist={onToggleWatchlist}
             />
           ))}
         </div>
@@ -71,7 +83,7 @@ export const MediaRow: React.FC<MediaRowProps> = ({ title, items, onPlay, onMore
         {/* Right Arrow Scroll */}
         <button
           onClick={() => handleScroll('right')}
-          className="absolute -right-3 sm:-right-4 top-1/2 -translate-y-1/2 z-40 bg-black/80 hover:bg-[#E50914] text-white p-2 sm:p-2.5 rounded-full opacity-0 group-hover/row:opacity-100 transition-all duration-300 backdrop-blur-md border border-white/20 shadow-2xl transform hover:scale-110"
+          className="absolute -right-3 sm:-right-4 top-1/2 -translate-y-1/2 z-40 bg-black/80 hover:bg-white hover:text-black text-white p-2 sm:p-2.5 rounded-full opacity-0 group-hover/row:opacity-100 transition-all duration-300 backdrop-blur-md border border-white/20 shadow-2xl transform hover:scale-110"
           aria-label="Scroll right"
         >
           <ChevronRight className="w-6 h-6 sm:w-7 sm:h-7" />

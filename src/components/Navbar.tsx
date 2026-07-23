@@ -1,106 +1,43 @@
-import React, { useState, useEffect } from 'react';
-import { Search, X } from 'lucide-react';
+import React from 'react';
+import { Search } from 'lucide-react';
 
 interface NavbarProps {
-  onSearch: (query: string) => void;
-  activeCategory: string;
-  setActiveCategory: (category: string) => void;
-  onResetFilters?: () => void;
+  activeTab: string;
+  setActiveTab: (tab: string) => void;
+  onOpenSearch: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
-  onSearch,
-  activeCategory,
-  setActiveCategory,
-  onResetFilters,
+  activeTab,
+  setActiveTab,
+  onOpenSearch,
 }) => {
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [searchOpen, setSearchOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-
-  useEffect(() => {
-    const handleScroll = () => {
-      if (window.scrollY > 40) {
-        setIsScrolled(true);
-      } else {
-        setIsScrolled(false);
-      }
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value;
-    setSearchQuery(val);
-    onSearch(val);
-  };
-
-  const clearSearch = () => {
-    setSearchQuery('');
-    onSearch('');
-    setSearchOpen(false);
-  };
-
   return (
-    <nav
-      className={`fixed top-0 left-0 right-0 z-50 transition-colors duration-500 ${
-        isScrolled ? 'bg-black/95 backdrop-blur-md shadow-2xl border-b border-white/5' : 'bg-gradient-to-b from-black/90 via-black/50 to-transparent'
-      }`}
-    >
-      <div className="max-w-[1440px] mx-auto px-4 sm:px-8 h-16 sm:h-20 flex items-center justify-between">
-        {/* Navigation Row */}
-        <div className="flex items-center gap-6 sm:gap-8 w-full justify-between">
-          {/* Brand Logo */}
+    <header className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-b from-black/90 via-black/50 to-transparent backdrop-blur-sm px-6 sm:px-12 py-5 transition-all">
+      <div className="max-w-[1600px] mx-auto flex items-center justify-between">
+        {/* Left Navigation Group */}
+        <div className="flex items-center gap-4 sm:gap-6 md:gap-8">
+          {/* Search Icon Button */}
           <button
-            onClick={() => {
-              setActiveCategory('home');
-              clearSearch();
-              onResetFilters?.();
-            }}
-            className="flex items-center gap-2 group focus:outline-none"
+            onClick={onOpenSearch}
+            className={`p-2.5 rounded-full transition-all duration-200 ${
+              activeTab === 'search'
+                ? 'bg-white text-black font-bold'
+                : 'text-zinc-300 hover:text-white hover:bg-white/10'
+            }`}
+            title="Search"
+            aria-label="Search"
           >
-            <span className="font-black text-2xl sm:text-3xl text-[#E50914] tracking-widest uppercase transform group-hover:scale-105 transition-all duration-300 drop-shadow-[0_2px_12px_rgba(229,9,20,0.6)] font-sans">
-              FREEFLIX
-            </span>
+            <Search className="w-5 h-5 sm:w-6 sm:h-6" />
           </button>
 
-          {/* Center Navigation Tabs with Pill Styling (matching image) */}
-          <div className="flex items-center justify-center gap-2 sm:gap-4 text-sm font-medium">
-            {/* Search Toggle */}
-            <div className={`relative flex items-center transition-all duration-300 ${searchOpen ? 'w-48 sm:w-64 bg-black/90 border border-white/30 rounded-full px-3 py-1.5 shadow-lg' : 'w-auto'}`}>
-              <button
-                onClick={() => setSearchOpen(!searchOpen)}
-                className="text-gray-200 hover:text-white transition-colors focus:outline-none p-1.5 hover:bg-white/10 rounded-full flex items-center gap-1.5"
-                aria-label="Search"
-              >
-                <Search className="w-5 h-5" />
-              </button>
-              {searchOpen && (
-                <>
-                  <input
-                    type="text"
-                    placeholder="Search movies & shows..."
-                    value={searchQuery}
-                    onChange={handleSearchChange}
-                    autoFocus
-                    className="bg-transparent text-white text-xs sm:text-sm pl-2 pr-6 w-full focus:outline-none placeholder-gray-400"
-                  />
-                  {searchQuery && (
-                    <button onClick={clearSearch} className="absolute right-2 text-gray-400 hover:text-white">
-                      <X className="w-4 h-4" />
-                    </button>
-                  )}
-                </>
-              )}
-            </div>
-
-            {/* Nav Items */}
+          {/* Nav Tabs */}
+          <div className="flex items-center gap-2 sm:gap-3 text-sm sm:text-base font-semibold">
             <button
-              onClick={() => { setActiveCategory('home'); clearSearch(); onResetFilters?.(); }}
-              className={`px-3 sm:px-4 py-1.5 rounded-full text-xs sm:text-sm transition-all duration-200 ${
-                activeCategory === 'home'
-                  ? 'bg-zinc-800 text-white font-bold border border-white/20'
+              onClick={() => setActiveTab('home')}
+              className={`px-4 sm:px-6 py-2 rounded-full transition-all duration-200 ${
+                activeTab === 'home'
+                  ? 'bg-white/90 text-black font-extrabold shadow-lg scale-105'
                   : 'text-zinc-300 hover:text-white hover:bg-white/10'
               }`}
             >
@@ -108,36 +45,47 @@ export const Navbar: React.FC<NavbarProps> = ({
             </button>
 
             <button
-              onClick={() => { setActiveCategory('tv'); clearSearch(); }}
-              className={`px-3 sm:px-4 py-1.5 rounded-full text-xs sm:text-sm transition-all duration-200 ${
-                activeCategory === 'tv'
-                  ? 'bg-zinc-800 text-white font-bold border border-white/20'
+              onClick={() => setActiveTab('watchlist')}
+              className={`px-4 sm:px-6 py-2 rounded-full transition-all duration-200 ${
+                activeTab === 'watchlist'
+                  ? 'bg-white/90 text-black font-extrabold shadow-lg scale-105'
                   : 'text-zinc-300 hover:text-white hover:bg-white/10'
               }`}
             >
-              Shows
+              My Stuff
             </button>
 
             <button
-              onClick={() => { setActiveCategory('movie'); clearSearch(); }}
-              className={`px-3 sm:px-4 py-1.5 rounded-full text-xs sm:text-sm transition-all duration-200 ${
-                activeCategory === 'movie'
-                  ? 'bg-zinc-800 text-white font-bold border border-white/20'
+              onClick={() => setActiveTab('tv')}
+              className={`px-4 sm:px-6 py-2 rounded-full transition-all duration-200 ${
+                activeTab === 'tv'
+                  ? 'bg-white/90 text-black font-extrabold shadow-lg scale-105'
+                  : 'text-zinc-300 hover:text-white hover:bg-white/10'
+              }`}
+            >
+              TV Shows
+            </button>
+
+            <button
+              onClick={() => setActiveTab('movie')}
+              className={`px-4 sm:px-6 py-2 rounded-full transition-all duration-200 ${
+                activeTab === 'movie'
+                  ? 'bg-white/90 text-black font-extrabold shadow-lg scale-105'
                   : 'text-zinc-300 hover:text-white hover:bg-white/10'
               }`}
             >
               Movies
             </button>
           </div>
+        </div>
 
-          {/* Top Right Red Brand Logo 'N' (Matching image top-right N) */}
-          <div className="flex items-center">
-            <span className="text-[#E50914] font-black text-2xl sm:text-3xl tracking-tighter select-none drop-shadow-md">
-              N
-            </span>
-          </div>
+        {/* Right Logo Group (FREEFLIX - matching Hulu top right placement, NO USER ICON) */}
+        <div className="flex items-center gap-3">
+          <span className="text-white font-black text-2xl sm:text-3xl tracking-tight uppercase font-sans drop-shadow-md select-none">
+            FREEFLIX
+          </span>
         </div>
       </div>
-    </nav>
+    </header>
   );
 };

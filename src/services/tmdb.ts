@@ -47,7 +47,7 @@ export const STREAMING_PROVIDERS: StreamingProvider[] = [
     id: 'crunchyroll',
     name: 'Crunchyroll',
     badgeColor: '#F47521',
-    logoSvg: 'https://upload.wikimedia.org/wikipedia/commons/0/08/Crunchyroll_Logo.svg',
+    logoSvg: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRfb44e1f672ybZXlaHUYnYBp7fcf3f8aQnk-kafJd_ig&s=10',
     networkId: 1112,
     providerId: 283,
   },
