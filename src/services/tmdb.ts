@@ -171,6 +171,18 @@ export const STREAMING_PROVIDERS: StreamingProvider[] = [
 // Stream servers list
 export const STREAM_SERVERS: ServerOption[] = [
   {
+    id: '2embed',
+    name: '2Embed',
+    badge: 'Reliable',
+    quality: '1080p HD',
+    speed: 'Fast',
+    supportsTv: true,
+    getUrl: (id, type, s = 1, e = 1) =>
+      type === 'movie'
+        ? `https://www.2embed.cc/embed/${id}`
+        : `https://www.2embed.cc/embedtv/${id}&s=${s}&e=${e}`,
+  },
+  {
     id: 'superembed',
     name: 'SuperEmbed',
     badge: 'Multi-Source',

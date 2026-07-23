@@ -15,6 +15,7 @@ import { MyListSpotlight } from './components/MyListSpotlight';
 import { StreamingProvidersBar } from './components/StreamingProvidersBar';
 import { GenreNavigationBar, GenreOption } from './components/GenreNavigationBar';
 import { MediaRow } from './components/MediaRow';
+import { MovieCard } from './components/MovieCard';
 import { ContinueWatchingRow } from './components/ContinueWatchingRow';
 import { PlayerModal } from './components/PlayerModal';
 import { DetailModal } from './components/DetailModal';
@@ -33,6 +34,9 @@ export default function App() {
   const [actionMovies, setActionMovies] = useState<MediaItem[]>([]);
   const [animeShows, setAnimeShows] = useState<MediaItem[]>([]);
   const [searchResults, setSearchResults] = useState<MediaItem[]>([]);
+
+  // Search filtering state
+  const [searchTypeFilter, setSearchTypeFilter] = useState<'all' | 'movie' | 'tv'>('all');
 
   // Genre filtering state
   const [selectedGenreOption, setSelectedGenreOption] = useState<GenreOption | null>(null);
@@ -225,33 +229,109 @@ export default function App() {
         onSearch={setSearchQuery}
         activeCategory={activeCategory}
         setActiveCategory={setActiveCategory}
+        onResetFilters={() => {
+          setSelectedProviderId(null);
+          setSelectedGenreOption(null);
+        }}
       />
 
       {/* Main Content Area */}
       <main className="relative z-10">
         {/* Search Results View */}
         {searchQuery.trim() ? (
-          <div className="pt-28 px-4 sm:px-8 max-w-7xl mx-auto space-y-6">
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-white">
-              Search Results for <span className="text-[#E50914]">"{searchQuery}"</span>
-            </h1>
-            {searchResults.length === 0 ? (
-              <p className="text-gray-400 py-12 text-center text-base">
-                No titles matching your query. Try searching for movies, TV series, or genres.
-              </p>
-            ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                {searchResults.map((item) => (
-                  <div key={item.id} className="flex justify-center">
-                    <MediaRow
-                      title=""
-                      items={[item]}
-                      onPlay={handlePlayMedia}
-                      onMoreInfo={handleMoreInfo}
-                    />
-                  </div>
-                ))}
+          <div className="pt-28 px-4 sm:px-8 max-w-7xl mx-auto space-y-8">
+            {/* Search Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-800/80 pb-6">
+              <div>
+                <div className="flex items-center gap-3">
+                  <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+                    Search Results for <span className="text-[#E50914]">"{searchQuery}"</span>
+                  </h1>
+                  <span className="bg-red-950/60 text-red-400 border border-red-800/50 text-xs font-black px-3 py-1 rounded-full uppercase tracking-wider">
+                    {searchResults.length} {searchResults.length === 1 ? 'Title' : 'Titles'}
+                  </span>
+                </div>
+                <p className="text-zinc-400 text-xs sm:text-sm mt-1">
+                  Explore titles matching your search query.
+                </p>
               </div>
+
+              {/* Filter Tabs for Search */}
+              <div className="flex items-center gap-2 bg-zinc-900/90 p-1.5 rounded-2xl border border-zinc-800 self-start sm:self-auto">
+                <button
+                  onClick={() => setSearchTypeFilter('all')}
+                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                    searchTypeFilter === 'all'
+                      ? 'bg-[#E50914] text-white shadow-lg shadow-red-900/30'
+                      : 'text-zinc-400 hover:text-white'
+                  }`}
+                >
+                  All ({searchResults.length})
+                </button>
+                <button
+                  onClick={() => setSearchTypeFilter('movie')}
+                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                    searchTypeFilter === 'movie'
+                      ? 'bg-[#E50914] text-white shadow-lg shadow-red-900/30'
+                      : 'text-zinc-400 hover:text-white'
+                  }`}
+                >
+                  Movies ({searchResults.filter((i) => (i.media_type || (i.title ? 'movie' : 'tv')) === 'movie').length})
+                </button>
+                <button
+                  onClick={() => setSearchTypeFilter('tv')}
+                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                    searchTypeFilter === 'tv'
+                      ? 'bg-[#E50914] text-white shadow-lg shadow-red-900/30'
+                      : 'text-zinc-400 hover:text-white'
+                  }`}
+                >
+                  TV Shows ({searchResults.filter((i) => (i.media_type || (i.title ? 'movie' : 'tv')) === 'tv').length})
+                </button>
+              </div>
+            </div>
+
+            {searchResults.length === 0 ? (
+              <div className="py-20 text-center space-y-3 bg-zinc-900/30 rounded-3xl border border-zinc-800/50 my-6">
+                <p className="text-zinc-400 text-base font-medium">
+                  No titles found matching <span className="text-white font-bold">"{searchQuery}"</span>.
+                </p>
+                <p className="text-zinc-500 text-xs">
+                  Try searching for another movie, TV show, actor, or genre.
+                </p>
+              </div>
+            ) : (
+              (() => {
+                const displayed = searchResults.filter((item) => {
+                  if (searchTypeFilter === 'all') return true;
+                  const type = item.media_type || (item.title ? 'movie' : 'tv');
+                  return type === searchTypeFilter;
+                });
+
+                if (displayed.length === 0) {
+                  return (
+                    <div className="py-16 text-center space-y-2 bg-zinc-900/30 rounded-3xl border border-zinc-800/50">
+                      <p className="text-zinc-400 text-sm">
+                        No {searchTypeFilter === 'movie' ? 'movies' : 'TV shows'} found for "{searchQuery}".
+                      </p>
+                    </div>
+                  );
+                }
+
+                return (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 sm:gap-8 lg:gap-10 pb-20">
+                    {displayed.map((item) => (
+                      <MovieCard
+                        key={item.id}
+                        item={item}
+                        fullWidth={true}
+                        onPlay={handlePlayMedia}
+                        onMoreInfo={handleMoreInfo}
+                      />
+                    ))}
+                  </div>
+                );
+              })()
             )}
           </div>
         ) : (

@@ -5,12 +5,14 @@ interface NavbarProps {
   onSearch: (query: string) => void;
   activeCategory: string;
   setActiveCategory: (category: string) => void;
+  onResetFilters?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
   onSearch,
   activeCategory,
   setActiveCategory,
+  onResetFilters,
 }) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -54,6 +56,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             onClick={() => {
               setActiveCategory('home');
               clearSearch();
+              onResetFilters?.();
             }}
             className="flex items-center gap-2 group focus:outline-none"
           >
@@ -94,7 +97,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
             {/* Nav Items */}
             <button
-              onClick={() => { setActiveCategory('home'); clearSearch(); }}
+              onClick={() => { setActiveCategory('home'); clearSearch(); onResetFilters?.(); }}
               className={`px-3 sm:px-4 py-1.5 rounded-full text-xs sm:text-sm transition-all duration-200 ${
                 activeCategory === 'home'
                   ? 'bg-zinc-800 text-white font-bold border border-white/20'

@@ -94,20 +94,6 @@ export const StreamingProvidersBar: React.FC<StreamingProvidersBarProps> = ({
           ref={rowRef}
           className="flex items-center gap-3 sm:gap-4 overflow-x-auto no-scrollbar py-3 px-1 scroll-smooth"
         >
-          {/* 'All' Reset Card */}
-          <button
-            onClick={() => onSelectProvider(null)}
-            className={`flex-shrink-0 w-28 sm:w-36 md:w-40 h-20 sm:h-24 md:h-28 rounded-2xl sm:rounded-3xl border font-black text-xs sm:text-sm uppercase tracking-wider flex items-center justify-center transition-all duration-300 transform hover:scale-105 shadow-2xl relative overflow-hidden ${
-              selectedProviderId === null
-                ? 'bg-gradient-to-br from-[#E50914] to-red-700 text-white border-red-500 shadow-[0_0_20px_rgba(229,9,20,0.6)] scale-105 ring-2 ring-red-400'
-                : 'bg-zinc-950/90 text-white border-zinc-800 hover:border-zinc-500 hover:bg-zinc-900'
-            }`}
-          >
-            <span className="relative z-10 flex items-center gap-1.5">
-              <span>All Networks</span>
-            </span>
-          </button>
-
           {STREAMING_PROVIDERS.map((provider) => {
             const isSelected = selectedProviderId === provider.id;
             const logoUrl = provider.logoSvg || tmdbLogos[provider.id];
