@@ -93,7 +93,7 @@ export const STREAMING_PROVIDERS: StreamingProvider[] = [
     logoSvg: 'https://image.tmdb.org/t/p/w500/hUzeosd33nzE5MCNsZxCGEKTXaQ.png',
     companyId: 420,
     invertOnDark: false,
-    lightBg: true,
+    lightBg: false,
   },
   {
     id: 'warnerbros',
