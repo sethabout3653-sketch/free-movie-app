@@ -43,6 +43,7 @@ export interface StreamingProvider {
   providerId?: number; // TMDB watch provider ID for movies
   companyId?: number; // TMDB production company ID for studios
   badgeColor: string;
+  invertOnDark?: boolean; // invert dark logo graphics for black background
 }
 
 export interface ServerOption {
