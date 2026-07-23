@@ -262,53 +262,53 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/95 backdrop-blur-xl flex flex-col justify-between animate-fade-in">
+    <div className="fixed inset-0 z-50 bg-black/95 backdrop-blur-3xl flex flex-col justify-between animate-fade-in">
       {/* Top Navigation Bar */}
-      <div className="w-full px-4 sm:px-8 py-4 bg-gradient-to-b from-black via-black/80 to-transparent flex items-center justify-between z-30">
+      <div className="w-full px-4 sm:px-8 py-4 sm:py-5 bg-gradient-to-b from-black/90 via-black/50 to-transparent flex items-center justify-between z-30 pointer-events-none transition-all duration-300 opacity-100 hover:opacity-100">
         {/* Left Title & Season/Episode details */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-4 pointer-events-auto">
           <button
             onClick={onClose}
-            className="p-2 rounded-full bg-zinc-800/80 text-white hover:bg-[#E50914] transition-all"
+            className="p-2 sm:p-2.5 rounded-full bg-zinc-900/80 border border-white/10 text-white hover:bg-[#E50914] hover:border-red-500 hover:scale-110 transition-all backdrop-blur-md shadow-lg"
             title="Close player"
           >
-            <X className="w-5 h-5" />
+            <X className="w-5 h-5 sm:w-6 sm:h-6" />
           </button>
           <div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs uppercase font-extrabold text-[#E50914] bg-red-950/60 border border-red-800/40 px-2 py-0.5 rounded shadow-sm">
-                FREEFLIX Player
+            <div className="flex items-center gap-2.5">
+              <span className="text-[10px] sm:text-xs uppercase font-extrabold text-[#E50914] bg-red-950/80 border border-red-800/50 px-2 py-0.5 rounded-md shadow-[0_0_12px_rgba(229,9,20,0.3)] tracking-wider">
+                FREEFLIX
               </span>
-              <h2 className="text-base sm:text-lg font-bold text-white line-clamp-1">
+              <h2 className="text-sm sm:text-lg md:text-xl font-black text-white line-clamp-1 drop-shadow-md uppercase tracking-wide font-sans">
                 {title}
               </h2>
             </div>
             {mediaType === 'tv' && (
-              <p className="text-xs text-gray-400 font-medium">
-                Season {season}, Episode {episode}
+              <p className="text-[10px] sm:text-xs text-zinc-300 font-bold mt-0.5 tracking-wide">
+                SEASON {season} • EPISODE {episode}
               </p>
             )}
           </div>
         </div>
 
         {/* Right Server Picker */}
-        <div className="flex items-center gap-2 sm:gap-4">
+        <div className="flex items-center gap-2 sm:gap-4 pointer-events-auto">
           {/* Server Selector Dropdown */}
           <div className="relative">
             <button
               onClick={() => setShowServerMenu(!showServerMenu)}
-              className="flex items-center gap-2 bg-zinc-900 border border-red-600/40 hover:border-red-600 text-white px-3 py-1.5 rounded-lg text-xs sm:text-sm font-bold shadow-lg transition-all"
+              className="flex items-center gap-2 bg-zinc-900/80 border border-white/10 hover:border-[#E50914]/80 text-white px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold shadow-xl transition-all backdrop-blur-md"
             >
               <Server className="w-4 h-4 text-[#E50914]" />
-              <span className="hidden sm:inline">{selectedServer.name}</span>
-              <span className="sm:hidden">{selectedServer.id.toUpperCase()}</span>
-              <ChevronDown className="w-4 h-4 text-gray-400" />
+              <span className="hidden sm:inline tracking-wide">{selectedServer.name}</span>
+              <span className="sm:hidden tracking-wide">{selectedServer.id.toUpperCase()}</span>
+              <ChevronDown className="w-4 h-4 text-zinc-400" />
             </button>
 
             {showServerMenu && (
-              <div className="absolute right-0 mt-2 w-64 bg-zinc-900 border border-zinc-700 rounded-xl shadow-2xl z-50 p-2 space-y-1 max-h-80 overflow-y-auto">
-                <div className="text-[10px] font-bold uppercase text-gray-400 px-2 py-1">
-                  Select Streaming Server ({STREAM_SERVERS.length})
+              <div className="absolute right-0 mt-3 w-64 bg-zinc-900/95 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl z-50 p-2 space-y-1 max-h-80 overflow-y-auto">
+                <div className="text-[10px] font-black uppercase text-zinc-500 px-3 py-2 tracking-wider">
+                  Select Streaming Server
                 </div>
                 {STREAM_SERVERS.map((server) => {
                   const isSelected = server.id === selectedServer.id;
@@ -319,16 +319,16 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({
                         setSelectedServer(server);
                         setShowServerMenu(false);
                       }}
-                      className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold text-left transition-colors ${
+                      className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-left transition-all ${
                         isSelected
-                          ? 'bg-[#E50914] text-white'
-                          : 'text-gray-200 hover:bg-zinc-800 hover:text-white'
+                          ? 'bg-gradient-to-r from-[#E50914] to-red-700 text-white shadow-lg'
+                          : 'text-zinc-300 hover:bg-zinc-800 hover:text-white'
                       }`}
                     >
-                      <div className="flex items-center gap-2">
-                        <span>{server.name}</span>
+                      <div className="flex items-center gap-2.5">
+                        <span className="tracking-wide">{server.name}</span>
                         {server.badge && (
-                          <span className="text-[9px] bg-black/40 px-1.5 py-0.5 rounded font-black text-yellow-400">
+                          <span className="text-[9px] bg-black/50 px-1.5 py-0.5 rounded border border-white/10 font-black text-yellow-400 uppercase">
                             {server.badge}
                           </span>
                         )}
@@ -359,40 +359,40 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({
       </div>
 
       {/* Bottom TV Season / Episode Picker & Server Info Bar */}
-      <div className="w-full px-4 sm:px-8 py-3 bg-gradient-to-t from-black via-black/90 to-transparent flex flex-wrap items-center justify-between gap-3 z-30 border-t border-white/5">
-        <div className="flex items-center gap-3">
+      <div className="w-full px-4 sm:px-8 py-4 bg-gradient-to-t from-black via-black/80 to-transparent flex flex-wrap items-center justify-between gap-3 z-30 pointer-events-none transition-all duration-300 opacity-100 hover:opacity-100">
+        <div className="flex items-center gap-3 pointer-events-auto">
           {mediaType === 'tv' && (
             <>
               {/* Season Select */}
-              <div className="flex items-center gap-1.5 text-xs text-gray-300 font-semibold">
-                <span>Season:</span>
+              <div className="flex items-center gap-2 bg-zinc-900/80 backdrop-blur-md border border-white/10 rounded-xl pl-3 pr-1 py-1 shadow-lg">
+                <span className="text-[10px] sm:text-xs text-zinc-400 font-bold uppercase tracking-wider">Season</span>
                 <select
                   value={season}
                   onChange={(e) => {
                     setSeason(Number(e.target.value));
                     setEpisode(1);
                   }}
-                  className="bg-zinc-900 border border-zinc-700 text-white rounded px-2 py-1 text-xs focus:outline-none focus:border-red-600"
+                  className="bg-zinc-800/80 hover:bg-zinc-700 text-white font-bold rounded-lg px-2 py-1 sm:py-1.5 text-xs sm:text-sm focus:outline-none focus:ring-1 focus:ring-[#E50914] transition-colors cursor-pointer appearance-none outline-none border-none"
                 >
                   {Array.from({ length: totalSeasons }, (_, i) => i + 1).map((s) => (
                     <option key={s} value={s}>
-                      Season {s}
+                      {s}
                     </option>
                   ))}
                 </select>
               </div>
 
               {/* Episode Select */}
-              <div className="flex items-center gap-1.5 text-xs text-gray-300 font-semibold">
-                <span>Episode:</span>
+              <div className="flex items-center gap-2 bg-zinc-900/80 backdrop-blur-md border border-white/10 rounded-xl pl-3 pr-1 py-1 shadow-lg">
+                <span className="text-[10px] sm:text-xs text-zinc-400 font-bold uppercase tracking-wider">Episode</span>
                 <select
                   value={episode}
                   onChange={(e) => setEpisode(Number(e.target.value))}
-                  className="bg-zinc-900 border border-zinc-700 text-white rounded px-2 py-1 text-xs focus:outline-none focus:border-red-600"
+                  className="bg-zinc-800/80 hover:bg-zinc-700 text-white font-bold rounded-lg px-2 py-1 sm:py-1.5 text-xs sm:text-sm focus:outline-none focus:ring-1 focus:ring-[#E50914] transition-colors cursor-pointer appearance-none outline-none border-none"
                 >
                   {Array.from({ length: episodesInSeason }, (_, i) => i + 1).map((eNum) => (
                     <option key={eNum} value={eNum}>
-                      Episode {eNum}
+                      {eNum}
                     </option>
                   ))}
                 </select>
@@ -401,21 +401,13 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({
               {/* Next Episode Button */}
               <button
                 onClick={handleNextEpisode}
-                className="flex items-center gap-1.5 bg-[#E50914] hover:bg-red-700 text-white text-xs font-bold px-3 py-1.5 rounded transition-all shadow-md"
+                className="flex items-center gap-2 bg-gradient-to-r from-[#E50914] to-red-700 hover:from-red-500 hover:to-red-600 text-white text-[10px] sm:text-xs font-black uppercase tracking-wider px-4 py-2 sm:py-2.5 rounded-xl transition-all shadow-lg hover:scale-105"
               >
-                <SkipForward className="w-3.5 h-3.5" />
-                <span>Next Episode</span>
+                <span>Next Ep</span>
+                <SkipForward className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-white" />
               </button>
             </>
           )}
-        </div>
-
-        {/* Info & Status Badge */}
-        <div className="flex items-center gap-2 text-xs text-gray-400">
-          <span className="w-2 h-2 rounded-full bg-green-500 animate-ping"></span>
-          <span>Server Active: <strong className="text-white">{selectedServer.name}</strong></span>
-          <span className="text-zinc-600">|</span>
-          <span className="text-gray-400 hidden sm:inline">Progress Synced</span>
         </div>
       </div>
     </div>
