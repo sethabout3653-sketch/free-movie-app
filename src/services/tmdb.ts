@@ -28,7 +28,7 @@ export const STREAMING_PROVIDERS: StreamingProvider[] = [
     id: 'peacock',
     name: 'Peacock',
     badgeColor: '#00A8E1',
-    logoSvg: 'https://logodownload.org/wp-content/uploads/2022/12/peacock-logo-white.png',
+    logoSvg: 'file:///C:/Users/Admin/Downloads/Screenshot%202026-07-23%20145408-Photoroom.png',
     networkId: 3353,
     providerId: 386,
     invertOnDark: false,
