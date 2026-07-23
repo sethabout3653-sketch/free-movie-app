@@ -28,10 +28,10 @@ export const STREAMING_PROVIDERS: StreamingProvider[] = [
     id: 'peacock',
     name: 'Peacock',
     badgeColor: '#00A8E1',
-    logoSvg: 'https://logos-world.net/wp-content/uploads/2023/03/Peacock-Symbol.png',
+    logoSvg: 'https://static.wikia.nocookie.net/logopedia/images/b/ba/Peacock_2026_%28Icon_white%29.svg/revision/latest?cb=20260514102238',
     networkId: 3353,
     providerId: 386,
-    invertOnDark: true,
+    invertOnDark: false,
     lightBg: false,
   },
   {
