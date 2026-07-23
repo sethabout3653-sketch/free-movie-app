@@ -1,22 +1,14 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { Film, Tv, TrendingUp, Sparkles, Flame, Clapperboard, Clock, ShieldAlert } from 'lucide-react';
-import { MediaItem, ContinueWatchingItem, MediaType } from './types';
+import React, { useState, useEffect } from 'react';
+import { Film, Tv, TrendingUp, Sparkles, Flame, Clapperboard } from 'lucide-react';
+import { MediaItem, MediaType } from './types';
 import { STREAMING_PROVIDERS, fetchTMDB } from './services/tmdb';
-import {
-  getContinueWatchingList,
-  removeContinueWatchingItem,
-  toggleCompletedStatus,
-  clearAllContinueWatching,
-} from './services/storage';
 
 import { Navbar } from './components/Navbar';
-import { HeroBanner } from './components/HeroBanner';
 import { MyListSpotlight } from './components/MyListSpotlight';
 import { StreamingProvidersBar } from './components/StreamingProvidersBar';
 import { GenreNavigationBar, GenreOption } from './components/GenreNavigationBar';
 import { MediaRow } from './components/MediaRow';
 import { MovieCard } from './components/MovieCard';
-import { ContinueWatchingRow } from './components/ContinueWatchingRow';
 import { PlayerModal } from './components/PlayerModal';
 import { DetailModal } from './components/DetailModal';
 
@@ -26,7 +18,6 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState<string>('');
 
   // Rows state
-  const [heroItem, setHeroItem] = useState<MediaItem | null>(null);
   const [trending, setTrending] = useState<MediaItem[]>([]);
   const [popularMovies, setPopularMovies] = useState<MediaItem[]>([]);
   const [topTv, setTopTv] = useState<MediaItem[]>([]);
@@ -43,23 +34,11 @@ export default function App() {
   const [genreMovies, setGenreMovies] = useState<MediaItem[]>([]);
   const [genreTvShows, setGenreTvShows] = useState<MediaItem[]>([]);
 
-  // Continue Watching state
-  const [continueWatching, setContinueWatching] = useState<ContinueWatchingItem[]>([]);
-
   // Modals state
   const [playerMedia, setPlayerMedia] = useState<MediaItem | null>(null);
   const [playerSeason, setPlayerSeason] = useState<number>(1);
   const [playerEpisode, setPlayerEpisode] = useState<number>(1);
   const [detailMedia, setDetailMedia] = useState<MediaItem | null>(null);
-
-  // Refresh continue watching
-  const refreshContinueWatching = useCallback(() => {
-    setContinueWatching(getContinueWatchingList());
-  }, []);
-
-  useEffect(() => {
-    refreshContinueWatching();
-  }, [refreshContinueWatching]);
 
   // Initial Content Fetching
   useEffect(() => {
@@ -69,11 +48,6 @@ export default function App() {
         const trendingData = await fetchTMDB('/trending/all/week');
         const trendingResults: MediaItem[] = trendingData.results || [];
         setTrending(trendingResults);
-
-        // Featured Hero Item
-        if (trendingResults.length > 0) {
-          setHeroItem(trendingResults[0]);
-        }
 
         // Popular Movies
         const moviesData = await fetchTMDB('/movie/popular');
@@ -205,25 +179,13 @@ export default function App() {
     setDetailMedia(item);
   };
 
-  const handleDeleteContinueWatching = (id: string) => {
-    removeContinueWatchingItem(id);
-    refreshContinueWatching();
-  };
-
-  const handleToggleComplete = (id: string) => {
-    toggleCompletedStatus(id);
-    refreshContinueWatching();
-  };
-
-  const handleClearAllContinueWatching = () => {
-    clearAllContinueWatching();
-    refreshContinueWatching();
-  };
-
   const selectedProviderName = STREAMING_PROVIDERS.find((p) => p.id === selectedProviderId)?.name;
 
   return (
-    <div className="min-h-screen bg-[#141414] text-white font-sans antialiased pb-20 selection:bg-[#E50914]">
+    <div className="min-h-screen bg-[#060608] text-white font-sans antialiased pb-20 selection:bg-[#E50914] relative overflow-x-hidden">
+      {/* Ambient Red Lighting Background Glow */}
+      <div className="fixed top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[500px] bg-red-900/15 blur-[140px] pointer-events-none rounded-full z-0" />
+
       {/* Header Navbar */}
       <Navbar
         onSearch={setSearchQuery}
@@ -236,7 +198,7 @@ export default function App() {
       />
 
       {/* Main Content Area */}
-      <main className="relative z-10">
+      <main className="relative z-10 space-y-8">
         {/* Search Results View */}
         {searchQuery.trim() ? (
           <div className="pt-28 px-4 sm:px-8 max-w-7xl mx-auto space-y-8">
@@ -247,7 +209,7 @@ export default function App() {
                   <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
                     Search Results for <span className="text-[#E50914]">"{searchQuery}"</span>
                   </h1>
-                  <span className="bg-red-950/60 text-red-400 border border-red-800/50 text-xs font-black px-3 py-1 rounded-full uppercase tracking-wider">
+                  <span className="bg-red-950/80 text-red-400 border border-red-800/50 text-xs font-black px-3 py-1 rounded-full uppercase tracking-wider shadow-[0_0_10px_rgba(229,9,20,0.3)]">
                     {searchResults.length} {searchResults.length === 1 ? 'Title' : 'Titles'}
                   </span>
                 </div>
@@ -257,12 +219,12 @@ export default function App() {
               </div>
 
               {/* Filter Tabs for Search */}
-              <div className="flex items-center gap-2 bg-zinc-900/90 p-1.5 rounded-2xl border border-zinc-800 self-start sm:self-auto">
+              <div className="flex items-center gap-2 bg-zinc-900/90 p-1.5 rounded-2xl border border-zinc-800/80 backdrop-blur-md self-start sm:self-auto">
                 <button
                   onClick={() => setSearchTypeFilter('all')}
                   className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
                     searchTypeFilter === 'all'
-                      ? 'bg-[#E50914] text-white shadow-lg shadow-red-900/30'
+                      ? 'bg-[#E50914] text-white shadow-lg shadow-red-900/40'
                       : 'text-zinc-400 hover:text-white'
                   }`}
                 >
@@ -272,7 +234,7 @@ export default function App() {
                   onClick={() => setSearchTypeFilter('movie')}
                   className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
                     searchTypeFilter === 'movie'
-                      ? 'bg-[#E50914] text-white shadow-lg shadow-red-900/30'
+                      ? 'bg-[#E50914] text-white shadow-lg shadow-red-900/40'
                       : 'text-zinc-400 hover:text-white'
                   }`}
                 >
@@ -282,7 +244,7 @@ export default function App() {
                   onClick={() => setSearchTypeFilter('tv')}
                   className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
                     searchTypeFilter === 'tv'
-                      ? 'bg-[#E50914] text-white shadow-lg shadow-red-900/30'
+                      ? 'bg-[#E50914] text-white shadow-lg shadow-red-900/40'
                       : 'text-zinc-400 hover:text-white'
                   }`}
                 >
@@ -336,7 +298,7 @@ export default function App() {
           </div>
         ) : (
           <>
-            {/* Spotlight Featured Section matching image */}
+            {/* Disney+ Style Spotlight Banner */}
             {activeCategory === 'home' && trending.length > 0 && (
               <MyListSpotlight
                 items={trending}
@@ -345,16 +307,7 @@ export default function App() {
               />
             )}
 
-            {/* CONTINUE WATCHING ROW DIRECTLY BELOW MY LIST */}
-            <ContinueWatchingRow
-              items={continueWatching}
-              onPlay={handlePlayMedia}
-              onDeleteItem={handleDeleteContinueWatching}
-              onToggleComplete={handleToggleComplete}
-              onClearAll={handleClearAllContinueWatching}
-            />
-
-            {/* STREAMING PROVIDERS FILTER BAR IN MIDDLE OF HOME SCREEN */}
+            {/* STREAMING PROVIDERS BRAND HUBS (Disney+ Brand Hub style) */}
             <StreamingProvidersBar
               selectedProviderId={selectedProviderId}
               onSelectProvider={setSelectedProviderId}
@@ -507,9 +460,7 @@ export default function App() {
           initialEpisode={playerEpisode}
           onClose={() => {
             setPlayerMedia(null);
-            refreshContinueWatching();
           }}
-          onProgressUpdate={refreshContinueWatching}
         />
       )}
 
@@ -523,10 +474,10 @@ export default function App() {
       )}
 
       {/* Footer */}
-      <footer className="mt-20 border-t border-zinc-800 pt-12 pb-8 text-center text-xs text-gray-500 space-y-3">
-        <div className="font-sans font-black text-2xl text-[#E50914] tracking-widest drop-shadow-[0_2px_8px_rgba(229,9,20,0.5)]">FREEFLIX</div>
+      <footer className="mt-20 border-t border-zinc-800/80 pt-12 pb-8 text-center text-xs text-zinc-500 space-y-3 relative z-10">
+        <div className="font-sans font-black text-2xl text-[#E50914] tracking-widest drop-shadow-[0_2px_12px_rgba(229,9,20,0.6)]">FREEFLIX</div>
         <p>© 2026 FREEFLIX. Stream your favorite movies and TV shows for free.</p>
-        <p className="text-[10px] text-gray-600 max-w-xl mx-auto px-4">
+        <p className="text-[10px] text-zinc-600 max-w-xl mx-auto px-4">
           Disclaimer: FREEFLIX does not host any media files on its servers. All videos are embedded from third-party streaming providers.
         </p>
       </footer>

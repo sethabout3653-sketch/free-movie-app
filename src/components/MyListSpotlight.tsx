@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Play, Info, Plus, Check, Star } from 'lucide-react';
+import { Play, Info, Plus, Check, Star, Sparkles } from 'lucide-react';
 import { MediaItem } from '../types';
 import { getCertification } from '../services/tmdb';
 
@@ -12,9 +12,9 @@ interface MyListSpotlightProps {
 export const MyListSpotlight: React.FC<MyListSpotlightProps> = ({ items, onPlay, onMoreInfo }) => {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [certification, setCertification] = useState('TV-MA');
-  const [isMyList, setIsMyList] = useState(true);
+  const [isWatchlisted, setIsWatchlisted] = useState(false);
 
-  const displayItems = items.slice(0, 8);
+  const displayItems = items.slice(0, 7);
   const focusedItem = displayItems[selectedIndex] || displayItems[0];
 
   useEffect(() => {
@@ -31,148 +31,127 @@ export const MyListSpotlight: React.FC<MyListSpotlightProps> = ({ items, onPlay,
     ? `https://image.tmdb.org/t/p/w1280${focusedItem.backdrop_path}`
     : `https://image.tmdb.org/t/p/w1280${focusedItem.poster_path}`;
 
-  const year = (focusedItem.release_date || focusedItem.first_air_date)?.split('-')[0] || '2024';
+  const year = (focusedItem.release_date || focusedItem.first_air_date)?.split('-')[0] || '2025';
   const isTv = focusedItem.media_type === 'tv' || !focusedItem.title;
   const typeTag = isTv ? 'Series' : 'Movie';
 
   return (
-    <div className="pt-20 sm:pt-24 pb-6 px-4 sm:px-8 max-w-[1440px] mx-auto select-none">
-      {/* Main Grid: Left Focused Card + Right Poster Carousel */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Left Focused Card Column */}
-        <div className="lg:col-span-5 space-y-3">
-          {/* Main Focused Landscape Image Box with crisp white border outline */}
-          <div
-            onClick={() => onPlay(focusedItem)}
-            className="relative aspect-[16/9] w-full rounded-2xl overflow-hidden border-2 border-white shadow-2xl shadow-black/80 bg-zinc-900 group cursor-pointer transition-transform duration-300 transform hover:scale-[1.01]"
-          >
-            <img
-              src={backdropUrl}
-              alt={title}
-              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
+    <div className="pt-24 sm:pt-28 pb-8 px-4 sm:px-8 max-w-[1440px] mx-auto select-none space-y-6">
+      {/* Featured Spotlight Showcase Box - Disney+ Style Ambient Glow & Rounded 3D Floating Frame */}
+      <div className="relative rounded-3xl overflow-hidden border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.9)] bg-gradient-to-r from-zinc-950 via-zinc-900 to-black group">
+        {/* Ambient Red Blur Background Glow */}
+        <div className="absolute -inset-1 bg-gradient-to-r from-red-600/30 via-red-950/20 to-transparent blur-3xl opacity-60 pointer-events-none" />
 
-            {/* Red N Series / Film Badge + Title inside image */}
-            <div className="absolute bottom-4 left-4 right-4 space-y-1">
-              <div className="flex items-center gap-1.5 text-[11px] font-black text-[#E50914] uppercase tracking-widest">
-                <span className="bg-[#E50914] text-white px-1 py-0.2 rounded text-[9px] font-black">N</span>
-                <span>{isTv ? 'SERIES' : 'FILM'}</span>
-              </div>
-              <h3 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight drop-shadow-md uppercase leading-none">
-                {title}
-              </h3>
-            </div>
+        {/* Backdrop Image with Radial & Gradient Fades */}
+        <div className="relative h-[380px] sm:h-[460px] md:h-[520px] w-full overflow-hidden">
+          <img
+            src={backdropUrl}
+            alt={title}
+            className="w-full h-full object-cover object-top sm:object-center transition-transform duration-700 group-hover:scale-105"
+          />
+          {/* Fades for gradient contrast */}
+          <div className="absolute inset-0 bg-gradient-to-r from-black via-black/80 sm:via-black/50 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent" />
 
-            {/* Hover Play Icon Overlay */}
-            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-              <div className="w-14 h-14 rounded-full bg-[#E50914] text-white flex items-center justify-center shadow-2xl transform scale-90 group-hover:scale-100 transition-transform">
-                <Play className="w-7 h-7 fill-white ml-1" />
-              </div>
-            </div>
-          </div>
-
-          {/* Under-Card Metadata & Synopsis */}
-          <div className="space-y-2 pt-1 text-zinc-300">
-            {/* Sub-line info tags */}
-            <div className="flex items-center gap-2 text-xs sm:text-sm font-semibold text-zinc-300">
-              <span className="text-white font-bold">{isTv ? 'TV Dramas' : 'Action & Movies'}</span>
-              <span className="text-zinc-500">•</span>
-              <span>{year}</span>
-              <span className="text-zinc-500">•</span>
-              <span>{typeTag}</span>
-              <span className="text-zinc-500">•</span>
-              <span className="border border-zinc-600 px-1 py-0.2 rounded text-[10px] font-bold text-zinc-200">
+          {/* Hero Content Overlay */}
+          <div className="absolute bottom-0 left-0 right-0 p-6 sm:p-10 md:p-12 max-w-2xl space-y-4 z-20">
+            {/* Red Badge Indicator */}
+            <div className="flex items-center gap-2">
+              <span className="bg-[#E50914] text-white text-[10px] sm:text-xs font-black uppercase px-2.5 py-0.5 rounded-full tracking-wider shadow-[0_0_12px_#E50914]">
+                {isTv ? 'SERIES SPOTLIGHT' : 'FEATURED MOVIE'}
+              </span>
+              <span className="text-xs font-bold text-zinc-400 bg-black/60 px-2 py-0.5 rounded-md border border-white/10 backdrop-blur-md">
                 {certification}
               </span>
-              <div className="ml-auto flex items-center gap-1 text-yellow-400 text-xs font-bold bg-zinc-900/80 px-2 py-0.5 rounded border border-white/10">
-                <Star className="w-3 h-3 fill-yellow-400 stroke-none" />
-                <span>{focusedItem.vote_average?.toFixed(1) || '8.2'}</span>
+              <div className="flex items-center gap-1 text-yellow-400 text-xs font-bold bg-black/60 px-2 py-0.5 rounded-md border border-white/10 backdrop-blur-md">
+                <Star className="w-3.5 h-3.5 fill-yellow-400 stroke-none" />
+                <span>{focusedItem.vote_average?.toFixed(1) || '8.5'}</span>
               </div>
             </div>
 
-            {/* Overview snippet */}
-            <p className="text-xs sm:text-sm text-zinc-400 line-clamp-3 leading-relaxed font-normal">
-              {focusedItem.overview || 'Inspired by real events, this gripping dramatization delivers thrilling storytelling and unforgettable performances.'}
+            {/* Title */}
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-white tracking-tight uppercase leading-none drop-shadow-xl font-sans">
+              {title}
+            </h1>
+
+            {/* Tags & Year */}
+            <div className="flex items-center gap-2 text-xs sm:text-sm font-semibold text-zinc-300">
+              <span className="text-red-400 font-bold">{isTv ? 'Trending Series' : 'Blockbuster'}</span>
+              <span className="text-zinc-600">•</span>
+              <span>{year}</span>
+              <span className="text-zinc-600">•</span>
+              <span>{typeTag}</span>
+            </div>
+
+            {/* Synopsis */}
+            <p className="text-xs sm:text-sm text-zinc-300/90 line-clamp-2 sm:line-clamp-3 leading-relaxed font-normal max-w-xl drop-shadow">
+              {focusedItem.overview || 'Explore this acclaimed title now streaming in HD on FreeFlix.'}
             </p>
 
-            {/* Action buttons */}
+            {/* Shiny Disney+ Style Action Buttons */}
             <div className="flex items-center gap-3 pt-2">
               <button
                 onClick={() => onPlay(focusedItem)}
-                className="flex items-center justify-center gap-2 bg-white hover:bg-zinc-200 text-black font-extrabold text-xs sm:text-sm px-5 py-2 rounded-lg transition-all transform hover:scale-105 shadow-lg"
+                className="flex items-center justify-center gap-2.5 bg-[#E50914] hover:bg-red-600 text-white font-extrabold text-xs sm:text-sm px-6 py-3 rounded-2xl transition-all transform hover:scale-105 shadow-[0_8px_25px_rgba(229,9,20,0.5)] border border-red-500/50"
               >
-                <Play className="w-4 h-4 fill-black" />
-                Play
+                <Play className="w-4 h-4 fill-white" />
+                STREAM NOW
               </button>
               <button
                 onClick={() => onMoreInfo(focusedItem)}
-                className="flex items-center justify-center gap-2 bg-zinc-800/80 hover:bg-zinc-700 text-white font-bold text-xs sm:text-sm px-4 py-2 rounded-lg border border-white/10 transition-all transform hover:scale-105"
+                className="flex items-center justify-center gap-2 bg-zinc-900/90 hover:bg-zinc-800 text-white font-bold text-xs sm:text-sm px-5 py-3 rounded-2xl border border-white/20 transition-all transform hover:scale-105 backdrop-blur-md shadow-lg"
               >
-                <Info className="w-4 h-4" />
-                Details
+                <Info className="w-4 h-4 text-zinc-300" />
+                DETAILS
               </button>
               <button
-                onClick={() => setIsMyList(!isMyList)}
-                className="p-2 rounded-lg bg-zinc-800/80 border border-white/10 text-white hover:border-white transition-colors"
+                onClick={() => setIsWatchlisted(!isWatchlisted)}
+                className="p-3 rounded-2xl bg-zinc-900/90 border border-white/20 text-white hover:border-red-500/80 transition-all backdrop-blur-md transform hover:scale-105"
                 title="Watchlist"
               >
-                {isMyList ? <Check className="w-4 h-4 text-green-400" /> : <Plus className="w-4 h-4" />}
+                {isWatchlisted ? <Check className="w-4 h-4 text-emerald-400" /> : <Plus className="w-4 h-4" />}
               </button>
             </div>
           </div>
         </div>
+      </div>
 
-        {/* Right Poster Row Column */}
-        <div className="lg:col-span-7">
-          <div className="flex items-center gap-3 sm:gap-4 overflow-x-auto no-scrollbar py-1">
-            {displayItems.map((item, index) => {
-              const posterUrl = item.poster_path
-                ? `https://image.tmdb.org/t/p/w500${item.poster_path}`
-                : `https://image.tmdb.org/t/p/w500${item.backdrop_path}`;
-              const isSelected = index === selectedIndex;
-              const cardTitle = item.title || item.name || 'Title';
+      {/* Horizontal Carousel Thumbnails below Spotlight (Disney+ style selector) */}
+      <div className="space-y-2">
+        <div className="flex items-center gap-2 text-xs font-black uppercase text-zinc-400 tracking-wider">
+          <Sparkles className="w-3.5 h-3.5 text-[#E50914]" />
+          <span>Spotlight Selection</span>
+        </div>
+        <div className="flex items-center gap-3 sm:gap-4 overflow-x-auto no-scrollbar py-2">
+          {displayItems.map((item, index) => {
+            const posterUrl = item.poster_path
+              ? `https://image.tmdb.org/t/p/w500${item.poster_path}`
+              : `https://image.tmdb.org/t/p/w500${item.backdrop_path}`;
+            const isSelected = index === selectedIndex;
+            const cardTitle = item.title || item.name || 'Title';
 
-              return (
-                <div
-                  key={item.id}
-                  onClick={() => {
-                    setSelectedIndex(index);
-                  }}
-                  className={`relative flex-shrink-0 w-32 sm:w-40 md:w-44 aspect-[2/3] rounded-xl overflow-hidden cursor-pointer transition-all duration-300 bg-zinc-900 border ${
-                    isSelected
-                      ? 'border-2 border-white scale-105 shadow-xl shadow-black/80 z-20'
-                      : 'border-white/10 opacity-80 hover:opacity-100 hover:scale-102 hover:border-white/40'
-                  }`}
-                >
-                  {/* Poster Image */}
-                  <img
-                    src={posterUrl}
-                    alt={cardTitle}
-                    className="w-full h-full object-cover"
-                  />
-
-                  {/* Red N logo top-left corner */}
-                  <div className="absolute top-2 left-2 z-10">
-                    <span className="text-[#E50914] font-black text-sm drop-shadow-md">N</span>
-                  </div>
-
-                  {/* Optional Top 10 Ranking Badge on select cards */}
-                  {index === 1 && (
-                    <div className="absolute bottom-2 left-2 right-2 z-10 bg-black/80 backdrop-blur-md border border-red-500/30 rounded px-1.5 py-0.5 text-[9px] font-bold text-white flex items-center justify-center gap-1 shadow-md">
-                      <span className="text-[#E50914] font-black">TOP 10</span>
-                      <span className="truncate">#1 in TV Shows</span>
-                    </div>
-                  )}
-
-                  {/* Card Title Gradient overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 hover:opacity-100 transition-opacity p-2 flex items-end">
-                    <span className="text-white text-xs font-bold line-clamp-2">{cardTitle}</span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+            return (
+              <div
+                key={item.id}
+                onClick={() => setSelectedIndex(index)}
+                className={`relative flex-shrink-0 w-28 sm:w-36 md:w-40 aspect-[16/10] rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 bg-zinc-900 border ${
+                  isSelected
+                    ? 'border-2 border-[#E50914] ring-2 ring-[#E50914]/60 scale-105 shadow-[0_0_20px_rgba(229,9,20,0.5)] z-20'
+                    : 'border-white/10 opacity-70 hover:opacity-100 hover:scale-102 hover:border-white/30'
+                }`}
+              >
+                <img
+                  src={posterUrl}
+                  alt={cardTitle}
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
+                <p className="absolute bottom-1.5 left-2 right-2 text-[10px] font-bold text-white truncate">
+                  {cardTitle}
+                </p>
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>

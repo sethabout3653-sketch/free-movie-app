@@ -103,20 +103,23 @@ export const StreamingProvidersBar: React.FC<StreamingProvidersBarProps> = ({
               <button
                 key={provider.id}
                 onClick={() => onSelectProvider(isSelected ? null : provider.id)}
-                className={`flex-shrink-0 relative group/btn w-36 sm:w-48 md:w-56 h-20 sm:h-24 md:h-28 p-3 sm:p-5 rounded-2xl sm:rounded-3xl border flex items-center justify-center transition-all duration-300 transform hover:-translate-y-1 hover:scale-105 shadow-2xl overflow-hidden ${
+                className={`flex-shrink-0 relative group/btn w-36 sm:w-48 md:w-56 h-20 sm:h-24 md:h-28 p-3 sm:p-5 rounded-2xl border flex items-center justify-center transition-all duration-300 ease-out transform hover:-translate-y-1.5 hover:scale-105 shadow-2xl overflow-hidden ${
                   isSelected
-                    ? 'bg-black border-2 border-[#E50914] ring-2 ring-[#E50914]/70 shadow-[0_0_25px_rgba(229,9,20,0.5)] scale-105'
-                    : 'bg-zinc-950/90 border-zinc-800/90 hover:border-zinc-500 hover:bg-black'
+                    ? 'bg-gradient-to-b from-zinc-900 via-black to-red-950/40 border-2 border-[#E50914] ring-2 ring-[#E50914]/80 shadow-[0_0_30px_rgba(229,9,20,0.6)] scale-105'
+                    : 'bg-gradient-to-b from-zinc-900/90 to-zinc-950/90 border-zinc-800/80 hover:border-red-500/80 hover:shadow-[0_10px_30px_rgba(229,9,20,0.3)]'
                 }`}
                 title={`Filter by ${provider.name}`}
               >
                 {/* Subtle Brand Background Glow on Hover */}
                 <div
-                  className="absolute inset-0 opacity-0 group-hover/btn:opacity-15 transition-opacity duration-300 pointer-events-none rounded-2xl"
+                  className="absolute inset-0 opacity-0 group-hover/btn:opacity-20 transition-opacity duration-300 pointer-events-none rounded-2xl"
                   style={{ backgroundColor: provider.badgeColor || '#E50914' }}
                 />
 
-                {/* High Quality Official Brand Logo - Full Fit Centered in Black Card */}
+                {/* Glossy Diagonal Shimmer Light */}
+                <div className="absolute -top-12 -left-12 w-24 h-48 bg-white/5 rotate-45 transform group-hover/btn:translate-x-64 transition-transform duration-700 ease-in-out pointer-events-none" />
+
+                {/* High Quality Official Brand Logo */}
                 {!isFailed ? (
                   <div className="w-full h-full flex items-center justify-center relative z-10 pointer-events-none">
                     {provider.lightBg ? (
@@ -146,7 +149,6 @@ export const StreamingProvidersBar: React.FC<StreamingProvidersBarProps> = ({
                           provider.invertOnDark ? 'brightness-0 invert' : ''
                         }`}
                         onError={(e) => {
-                          // Fallback to TMDB logo if SVG fails
                           if (tmdbLogos[provider.id] && logoUrl !== tmdbLogos[provider.id]) {
                             (e.target as HTMLImageElement).src = tmdbLogos[provider.id];
                           } else {
@@ -168,9 +170,9 @@ export const StreamingProvidersBar: React.FC<StreamingProvidersBarProps> = ({
                   </div>
                 )}
 
-                {/* Selected Active Badge */}
+                {/* Selected Active Indicator */}
                 {isSelected && (
-                  <span className="absolute top-2.5 right-2.5 w-3.5 h-3.5 bg-[#E50914] rounded-full border-2 border-black animate-pulse z-20 shadow-[0_0_8px_#E50914]" />
+                  <span className="absolute top-2.5 right-2.5 w-3.5 h-3.5 bg-[#E50914] rounded-full border-2 border-black animate-pulse z-20 shadow-[0_0_10px_#E50914]" />
                 )}
               </button>
             );

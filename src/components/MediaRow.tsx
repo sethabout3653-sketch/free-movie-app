@@ -27,14 +27,15 @@ export const MediaRow: React.FC<MediaRowProps> = ({ title, items, onPlay, onMore
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 24 }}
+      initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: '-40px' }}
-      transition={{ duration: 0.5, ease: 'easeOut' }}
-      className="space-y-3 my-6 px-4 sm:px-8 max-w-7xl mx-auto group/row"
+      viewport={{ once: true, margin: '-30px' }}
+      transition={{ duration: 0.4, ease: 'easeOut' }}
+      className="space-y-3 my-8 px-4 sm:px-8 max-w-[1440px] mx-auto group/row"
     >
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2.5">
+          <span className="w-1.5 h-6 bg-[#E50914] rounded-full inline-block shadow-[0_0_12px_#E50914]" />
           {icon}
           <h2 className="text-lg sm:text-xl md:text-2xl font-black text-white tracking-wide uppercase font-sans">
             {title}
@@ -46,16 +47,16 @@ export const MediaRow: React.FC<MediaRowProps> = ({ title, items, onPlay, onMore
         {/* Left Arrow Scroll */}
         <button
           onClick={() => handleScroll('left')}
-          className="absolute left-0 top-0 bottom-0 z-40 bg-black/70 hover:bg-black/90 text-white px-2 rounded-r-lg opacity-0 group-hover/row:opacity-100 transition-opacity duration-300 flex items-center justify-center backdrop-blur-sm"
+          className="absolute -left-3 sm:-left-4 top-1/2 -translate-y-1/2 z-40 bg-black/80 hover:bg-[#E50914] text-white p-2 sm:p-2.5 rounded-full opacity-0 group-hover/row:opacity-100 transition-all duration-300 backdrop-blur-md border border-white/20 shadow-2xl transform hover:scale-110"
           aria-label="Scroll left"
         >
-          <ChevronLeft className="w-8 h-8" />
+          <ChevronLeft className="w-6 h-6 sm:w-7 sm:h-7" />
         </button>
 
         {/* Scrollable Row */}
         <div
           ref={rowRef}
-          className="flex items-center gap-3 sm:gap-4 overflow-x-auto no-scrollbar py-3 px-1 scroll-smooth"
+          className="flex items-center gap-3 sm:gap-5 overflow-x-auto no-scrollbar py-4 px-1 scroll-smooth"
         >
           {items.map((item) => (
             <MovieCard
@@ -70,10 +71,10 @@ export const MediaRow: React.FC<MediaRowProps> = ({ title, items, onPlay, onMore
         {/* Right Arrow Scroll */}
         <button
           onClick={() => handleScroll('right')}
-          className="absolute right-0 top-0 bottom-0 z-40 bg-black/70 hover:bg-black/90 text-white px-2 rounded-l-lg opacity-0 group-hover/row:opacity-100 transition-opacity duration-300 flex items-center justify-center backdrop-blur-sm"
+          className="absolute -right-3 sm:-right-4 top-1/2 -translate-y-1/2 z-40 bg-black/80 hover:bg-[#E50914] text-white p-2 sm:p-2.5 rounded-full opacity-0 group-hover/row:opacity-100 transition-all duration-300 backdrop-blur-md border border-white/20 shadow-2xl transform hover:scale-110"
           aria-label="Scroll right"
         >
-          <ChevronRight className="w-8 h-8" />
+          <ChevronRight className="w-6 h-6 sm:w-7 sm:h-7" />
         </button>
       </div>
     </motion.div>
