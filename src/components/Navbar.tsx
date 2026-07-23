@@ -57,7 +57,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             }}
             className="flex items-center gap-2 group focus:outline-none"
           >
-            <span className="font-black text-2xl sm:text-3xl text-[#E50914] tracking-widest uppercase transform group-hover:scale-105 transition-transform duration-200 drop-shadow-[0_2px_10px_rgba(229,9,20,0.5)]">
+            <span className="font-black text-2xl sm:text-3xl text-[#E50914] tracking-widest uppercase transform group-hover:scale-105 transition-all duration-300 drop-shadow-[0_2px_12px_rgba(229,9,20,0.6)] font-sans">
               FREEFLIX
             </span>
           </button>

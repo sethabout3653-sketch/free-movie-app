@@ -1,6 +1,6 @@
 {
   "name": "FREEFLIX",
-  "description": "Free movies and TV shows streaming web application featuring FREEFLIX UI, custom server choices, provider filters, and continue watching progress.",
+  "description": "FREEFLIX - Premier movies and TV shows streaming web application featuring custom server choices, provider filters, and continue watching progress.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

@@ -44,6 +44,7 @@ export interface StreamingProvider {
   companyId?: number; // TMDB production company ID for studios
   badgeColor: string;
   invertOnDark?: boolean; // invert dark logo graphics for black background
+  lightBg?: boolean; // render with a clean white/light frosted backdrop for dark logos
 }
 
 export interface ServerOption {
