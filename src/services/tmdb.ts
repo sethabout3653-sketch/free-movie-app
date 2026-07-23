@@ -18,9 +18,11 @@ export const STREAMING_PROVIDERS: StreamingProvider[] = [
     id: 'hulu',
     name: 'Hulu',
     badgeColor: '#1CE783',
-    logoSvg: 'https://upload.wikimedia.org/wikipedia/commons/e/e4/Hulu_Logo.svg',
+    logoSvg: 'https://logodownload.org/wp-content/uploads/2019/09/hulu-logo-4.png',
     networkId: 453,
     providerId: 15,
+    invertOnDark: false,
+    lightBg: false,
   },
   {
     id: 'peacock',
