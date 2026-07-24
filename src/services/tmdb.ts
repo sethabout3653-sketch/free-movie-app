@@ -59,7 +59,7 @@ export const STREAMING_PROVIDERS: StreamingProvider[] = [
     logoSvg: 'https://upload.wikimedia.org/wikipedia/commons/2/28/Apple_TV_Plus_Logo.svg',
     networkId: 2552,
     providerId: 350,
-    invertOnDark: true,
+    invertOnDark: false,
   },
   {
     id: 'disney',
@@ -108,7 +108,7 @@ export const STREAMING_PROVIDERS: StreamingProvider[] = [
     badgeColor: '#000000',
     logoSvg: 'https://upload.wikimedia.org/wikipedia/commons/e/e0/Universal_Pictures_logo.svg',
     companyId: 33,
-    invertOnDark: true,
+    invertOnDark: false,
   },
   {
     id: 'sony',
@@ -116,7 +116,7 @@ export const STREAMING_PROVIDERS: StreamingProvider[] = [
     badgeColor: '#000000',
     logoSvg: 'https://upload.wikimedia.org/wikipedia/commons/a/a2/Sony_Pictures_logo.svg',
     companyId: 34,
-    invertOnDark: true,
+    invertOnDark: false,
   },
   {
     id: 'a24',
@@ -124,7 +124,7 @@ export const STREAMING_PROVIDERS: StreamingProvider[] = [
     badgeColor: '#000000',
     logoSvg: 'https://upload.wikimedia.org/wikipedia/commons/7/7b/A24_logo.svg',
     companyId: 41077,
-    invertOnDark: true,
+    invertOnDark: false,
   },
   {
     id: 'starz',
@@ -133,7 +133,7 @@ export const STREAMING_PROVIDERS: StreamingProvider[] = [
     logoSvg: 'https://upload.wikimedia.org/wikipedia/commons/6/60/Starz_2022.svg',
     networkId: 318,
     providerId: 43,
-    invertOnDark: true,
+    invertOnDark: false,
   },
   {
     id: 'showtime',
@@ -142,6 +142,7 @@ export const STREAMING_PROVIDERS: StreamingProvider[] = [
     logoSvg: 'https://upload.wikimedia.org/wikipedia/commons/2/22/Showtime.svg',
     networkId: 67,
     providerId: 37,
+    invertOnDark: false,
   },
   {
     id: 'amc',
@@ -149,7 +150,7 @@ export const STREAMING_PROVIDERS: StreamingProvider[] = [
     badgeColor: '#000000',
     logoSvg: 'https://upload.wikimedia.org/wikipedia/commons/1/1d/AMC_Logo.svg',
     networkId: 174,
-    invertOnDark: true,
+    invertOnDark: false,
   },
   {
     id: 'fx',
@@ -157,7 +158,7 @@ export const STREAMING_PROVIDERS: StreamingProvider[] = [
     badgeColor: '#000000',
     logoSvg: 'https://upload.wikimedia.org/wikipedia/commons/8/87/FX_Network_logo.svg',
     networkId: 88,
-    invertOnDark: true,
+    invertOnDark: false,
   },
   {
     id: 'pixar',
@@ -165,7 +166,31 @@ export const STREAMING_PROVIDERS: StreamingProvider[] = [
     badgeColor: '#000000',
     logoSvg: 'https://upload.wikimedia.org/wikipedia/commons/4/40/Pixar_logo.svg',
     companyId: 3,
-    invertOnDark: true,
+    invertOnDark: false,
+  },
+  {
+    id: 'tubi',
+    name: 'Tubi',
+    badgeColor: '#F35216',
+    logoSvg: 'https://upload.wikimedia.org/wikipedia/commons/8/8d/Tubi_logo.svg',
+    providerId: 73,
+    invertOnDark: false,
+  },
+  {
+    id: 'pluto',
+    name: 'Pluto TV',
+    badgeColor: '#FFDF00',
+    logoSvg: 'https://upload.wikimedia.org/wikipedia/commons/3/36/Pluto_TV_logo.svg',
+    providerId: 300,
+    invertOnDark: false,
+  },
+  {
+    id: 'mgm',
+    name: 'MGM+',
+    badgeColor: '#D3A354',
+    logoSvg: 'https://upload.wikimedia.org/wikipedia/commons/1/18/MGM%2B_logo_2023.svg',
+    providerId: 582,
+    invertOnDark: false,
   }
 ];
 
@@ -255,11 +280,19 @@ export async function fetchTMDB(endpoint: string, params: Record<string, string>
     ...params,
   }).toString();
 
-  const res = await fetch(`${TMDB_BASE_URL}${endpoint}?${query}`);
-  if (!res.ok) {
-    throw new Error(`TMDB error ${res.status}`);
+  const separator = endpoint.includes('?') ? '&' : '?';
+  const url = `${TMDB_BASE_URL}${endpoint}${separator}${query}`;
+
+  try {
+    const res = await fetch(url);
+    if (!res.ok) {
+      throw new Error(`TMDB error ${res.status}`);
+    }
+    return await res.json();
+  } catch (error) {
+    console.error('TMDB Fetch Error:', error);
+    throw error;
   }
-  return res.json();
 }
 
 // Helper to fetch Content Rating / Certification (PG-13, TV-MA, R, etc.)

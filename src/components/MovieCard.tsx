@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Play, Star, Info, Film, Tv, Bookmark, Check } from 'lucide-react';
+import { motion } from 'motion/react';
 import { MediaItem, MediaType } from '../types';
 import { getCertification } from '../services/tmdb';
 
@@ -64,21 +65,26 @@ export const MovieCard: React.FC<MovieCardProps> = ({
   const ratingNumber = item.vote_average ? item.vote_average.toFixed(1) : '8.1';
 
   return (
-    <div
+    <motion.div
+      initial={{ opacity: 0, y: 15 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-40px" }}
+      transition={{ duration: 0.4, ease: "easeOut" }}
+      whileHover={{ scale: 1.05, y: -6, zIndex: 30 }}
       onClick={() => onPlay(item)}
       className={`relative group ${
         fullWidth ? 'w-full' : 'w-36 sm:w-48 md:w-52 flex-shrink-0'
-      } rounded-2xl overflow-hidden bg-gradient-to-b from-zinc-900/90 via-zinc-900/60 to-black border border-white/10 hover:border-white transition-all duration-300 ease-out transform hover:scale-[1.04] hover:-translate-y-2 hover:z-30 hover:shadow-[0_12px_32px_rgba(255,255,255,0.15)] cursor-pointer`}
+      } rounded-3xl overflow-hidden bg-gradient-to-b from-zinc-900/90 via-zinc-900/60 to-black border border-white/10 hover:border-white shadow-xl hover:shadow-[0_12px_40px_rgba(255,255,255,0.15)] cursor-pointer transition-colors duration-300`}
     >
       {/* Poster Image Container */}
-      <div className="relative aspect-[2/3] w-full overflow-hidden bg-zinc-950">
+      <div className="relative aspect-[2/3] w-full overflow-hidden bg-zinc-950 rounded-t-3xl">
         {currentPosterUrl ? (
           <img
             src={currentPosterUrl}
             alt={title}
             loading="lazy"
             onError={handleImgError}
-            className="w-full h-full object-cover object-center transition-transform duration-500 ease-out group-hover:scale-110"
+            className="w-full h-full object-cover object-center transition-transform duration-700 ease-out group-hover:scale-110"
           />
         ) : (
           /* Styled Fallback Poster Card */
@@ -179,6 +185,6 @@ export const MovieCard: React.FC<MovieCardProps> = ({
           </div>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 };

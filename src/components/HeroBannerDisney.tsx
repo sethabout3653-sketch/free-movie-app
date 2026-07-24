@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Play, ArrowRight, Check, Plus } from 'lucide-react';
+import { Play, ArrowRight, Check, Plus, Star } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 import { MediaItem } from '../types';
 import { getCertification } from '../services/tmdb';
 
@@ -53,51 +54,97 @@ export const HeroBannerDisney: React.FC<HeroBannerDisneyProps> = ({
 
   return (
     <div className="relative w-full h-[580px] sm:h-[650px] md:h-[720px] overflow-hidden select-none bg-[#0a0a0c]">
-      {/* Full Bleed Backdrop Image */}
-      <div className="absolute inset-0">
-        <img
+      <AnimatePresence mode="wait">
+        <motion.div
           key={currentItem.id}
-          src={backdropUrl}
-          alt={title}
-          className="w-full h-full object-cover object-center transition-all duration-1000 transform scale-100 animate-fade-in filter brightness-90"
-        />
+          initial={{ opacity: 0, scale: 1.05 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 1.5, ease: "easeInOut" }}
+          className="absolute inset-0"
+        >
+          {/* Full Bleed Backdrop Image */}
+          <div className="absolute inset-0">
+            <img
+              src={backdropUrl}
+              alt={title}
+              className="w-full h-full object-cover object-center filter brightness-90"
+            />
+            {/* Ambient Dark Gradient Overlays matching Hulu cinematic glow */}
+            <div className="absolute inset-0 bg-gradient-to-r from-[#0a0a0c] via-[#0a0a0c]/85 md:via-[#0a0a0c]/60 to-transparent w-full md:w-3/4" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#060608] via-transparent to-black/60" />
+          </div>
 
-        {/* Ambient Dark Gradient Overlays matching Hulu cinematic glow */}
-        <div className="absolute inset-0 bg-gradient-to-r from-[#0a0a0c] via-[#0a0a0c]/85 md:via-[#0a0a0c]/60 to-transparent w-full md:w-3/4" />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#060608] via-transparent to-black/60" />
-      </div>
+          {/* Hero Left Content Area */}
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
+            className="absolute bottom-16 sm:bottom-24 left-6 sm:left-12 md:left-16 max-w-xl md:max-w-2xl z-20 space-y-4 pr-4"
+          >
+            {/* Eyebrow / Network Badge */}
+            <div className="flex items-center gap-2">
+              <span className="text-sky-400 font-black text-sm tracking-widest uppercase">FREEFLIX</span>
+              <span className="text-xs font-bold px-2 py-0.5 rounded bg-white/10 text-zinc-300 border border-white/20">ORIGINAL</span>
+            </div>
 
-      {/* Hero Left Content Area (Matching User UI Image) */}
-      <div className="absolute bottom-16 sm:bottom-24 left-6 sm:left-12 md:left-16 max-w-xl md:max-w-2xl z-20 space-y-4 pr-4">
-        {/* Eyebrow: START WATCHING */}
-        <div className="text-zinc-300 font-extrabold text-xs sm:text-sm tracking-[0.25em] uppercase">
-          START WATCHING
-        </div>
+            {/* Main Bold Title */}
+            <h1 className="text-3xl sm:text-5xl md:text-6xl font-black text-white tracking-tight uppercase leading-none font-sans drop-shadow-2xl">
+              {title}
+            </h1>
 
-        {/* Main Bold Uppercase Title */}
-        <h1 className="text-3xl sm:text-5xl md:text-6xl font-black text-white tracking-tight uppercase leading-none font-sans drop-shadow-xl">
-          {title}
-        </h1>
+            {/* Status Tagline in Green */}
+            <div className="text-emerald-400 font-bold text-xs sm:text-sm flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span>New Episodes Now Streaming</span>
+            </div>
 
-        {/* Description / Synopsis */}
-        <p className="text-xs sm:text-sm md:text-base text-zinc-300 line-clamp-3 leading-relaxed font-medium max-w-xl drop-shadow">
-          {currentItem.overview ||
-            'Starring Reese Witherspoon and Kerry Washington, follows the intertwined fates of the picture-perfect Richardson family and an enigmatic mother and daughter who upend their lives.'}
-        </p>
+            {/* Star Rating & Metadata Line (Matching Image: ★★★★☆ 1,156  2024  4 seasons  Action • Sci-Fi  [TV-MA] [AD]) */}
+            <div className="flex flex-wrap items-center gap-2.5 text-xs sm:text-sm font-bold text-zinc-200">
+              <div className="flex items-center text-amber-400 gap-0.5">
+                <Star className="w-4 h-4 fill-amber-400" />
+                <Star className="w-4 h-4 fill-amber-400" />
+                <Star className="w-4 h-4 fill-amber-400" />
+                <Star className="w-4 h-4 fill-amber-400" />
+                <Star className="w-4 h-4 text-amber-400/50" />
+                <span className="text-zinc-300 ml-1">1,420</span>
+              </div>
+              <span className="text-zinc-500">•</span>
+              <span>{year}</span>
+              <span className="text-zinc-500">•</span>
+              <span>{currentItem.media_type === 'tv' ? '4 Seasons' : 'Movie'}</span>
+              <span className="text-zinc-500">•</span>
+              <span>Action • Sci-Fi</span>
 
-        {/* Metadata Line: TVMA · Drama · 2020 */}
-        <div className="flex items-center gap-2 text-xs sm:text-sm font-bold text-zinc-300 tracking-wide">
-          <span>{certification}</span>
-          <span className="text-zinc-500">•</span>
-          <span>Drama</span>
-          <span className="text-zinc-500">•</span>
-          <span>{year}</span>
-        </div>
+              {/* Rating Badges */}
+              <span className="ml-1 px-1.5 py-0.5 text-[10px] font-black rounded border border-zinc-400 text-zinc-200 uppercase bg-black/40">
+                {certification}
+              </span>
+              <span className="px-1.5 py-0.5 text-[10px] font-black rounded border border-zinc-400 text-zinc-200 uppercase bg-black/40">
+                AD
+              </span>
+            </div>
 
-        {/* Action Buttons: ▶ PLAY  → DETAILS */}
-        <div className="flex flex-wrap items-center gap-4 pt-2">
-          <button
-            onClick={() => onPlay(currentItem)}
+            {/* Description / Synopsis */}
+            <p className="text-xs sm:text-sm md:text-base text-zinc-300 line-clamp-3 leading-relaxed font-medium max-w-xl drop-shadow-md">
+              {currentItem.overview ||
+                'Starring Reese Witherspoon and Kerry Washington, follows the intertwined fates of the picture-perfect Richardson family and an enigmatic mother and daughter who upend their lives.'}
+            </p>
+
+            {/* Included with Freeflix Badge */}
+            <div className="flex items-center gap-2 text-xs font-bold text-emerald-400">
+              <div className="w-4 h-4 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center border border-emerald-400/40">
+                <Check className="w-3 h-3 stroke-[3]" />
+              </div>
+              <span>Included with Freeflix</span>
+            </div>
+
+            {/* Action Buttons: ▶ PLAY  → DETAILS */}
+
+            {/* Action Buttons: ▶ PLAY  → DETAILS */}
+            <div className="flex flex-wrap items-center gap-4 pt-2">
+              <button
+                onClick={() => onPlay(currentItem)}
             className="flex items-center justify-center gap-2.5 bg-white hover:bg-zinc-200 text-black font-extrabold text-xs sm:text-sm px-7 py-3 rounded-md transition-all duration-200 transform hover:scale-105 shadow-xl"
           >
             <Play className="w-4 h-4 fill-black ml-0.5" />
@@ -135,7 +182,9 @@ export const HeroBannerDisney: React.FC<HeroBannerDisneyProps> = ({
             </button>
           )}
         </div>
-      </div>
+      </motion.div>
+    </motion.div>
+  </AnimatePresence>
 
       {/* Watermark Badge in Bottom Right Corner (FREEFLIX ORIGINALS - matching hulu ORIGINALS) */}
       <div className="absolute bottom-10 right-8 sm:right-12 z-20 flex flex-col items-end opacity-90 select-none">

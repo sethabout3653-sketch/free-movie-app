@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, Play, Star, Check, Plus, Film, Tv, Tv2, Sparkles, Youtube } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 import { MediaItem, MediaType } from '../types';
 import { fetchTMDB, getCertification } from '../services/tmdb';
 
@@ -121,8 +122,20 @@ export const DetailModal: React.FC<DetailModalProps> = ({
   }, [item.id, mediaType, selectedSeason]);
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
-      <div className="relative w-full max-w-4xl bg-[#121214] rounded-3xl overflow-hidden shadow-2xl border border-white/10 my-6 max-h-[92vh] flex flex-col">
+    <motion.div 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.3 }}
+      className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 overflow-y-auto"
+    >
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: 20 }}
+        transition={{ duration: 0.3, ease: 'easeOut' }}
+        className="relative w-full max-w-4xl bg-[#121214] rounded-3xl overflow-hidden shadow-2xl border border-white/10 my-6 max-h-[92vh] flex flex-col"
+      >
         {/* Close Button */}
         <button
           onClick={onClose}
@@ -405,8 +418,8 @@ export const DetailModal: React.FC<DetailModalProps> = ({
             )}
           </div>
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 };
 

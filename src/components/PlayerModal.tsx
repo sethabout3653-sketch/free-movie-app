@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { X, Server, SkipForward, Tv, Film, Check, AlertCircle, Play, Pause, ChevronDown, Clock, RotateCcw } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 import { MediaItem, MediaType, ServerOption } from '../types';
 import { STREAM_SERVERS, fetchTMDB } from '../services/tmdb';
 import { saveContinueWatchingItem, getContinueWatchingList } from '../services/storage';
@@ -262,7 +263,13 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/95 backdrop-blur-3xl flex flex-col justify-between animate-fade-in">
+    <motion.div 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.3 }}
+      className="fixed inset-0 z-50 bg-black/95 backdrop-blur-3xl flex flex-col justify-between"
+    >
       {/* Top Navigation Bar */}
       <div className="w-full px-4 sm:px-8 py-4 sm:py-5 bg-gradient-to-b from-black/90 via-black/50 to-transparent flex items-center justify-between z-30 pointer-events-none transition-all duration-300 opacity-100 hover:opacity-100">
         {/* Left Title & Season/Episode details */}
@@ -410,6 +417,6 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({
           )}
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 };

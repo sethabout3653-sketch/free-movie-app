@@ -30,6 +30,7 @@ import { MediaRow } from './components/MediaRow';
 import { MovieCard } from './components/MovieCard';
 import { PlayerModal } from './components/PlayerModal';
 import { DetailModal } from './components/DetailModal';
+import { Top10Row } from './components/Top10Row';
 
 interface WatchHistoryItem {
   item: MediaItem;
@@ -566,6 +567,16 @@ export default function App() {
                     onToggleWatchlist={handleToggleWatchlist}
                   />
                 )}
+
+                {/* Top 10 Ranked Row with Overlapping Giant Numbers */}
+                <Top10Row
+                  title="Top 10 Today"
+                  items={heroItems.length > 0 ? heroItems : popularMovies}
+                  onPlay={handlePlayMedia}
+                  onMoreInfo={handleMoreInfo}
+                  watchlist={watchlist}
+                  onToggleWatchlist={handleToggleWatchlist}
+                />
 
                 <div className="space-y-8 px-2 sm:px-6 pt-4">
                   {/* Continue Watching Row */}
@@ -1108,27 +1119,31 @@ export default function App() {
       </main>
 
       {/* STREAMING PLAYER MODAL */}
-      {playerMedia && (
-        <PlayerModal
-          item={playerMedia}
-          initialSeason={playerSeason}
-          initialEpisode={playerEpisode}
-          onClose={() => {
-            setPlayerMedia(null);
-          }}
-        />
-      )}
+      <AnimatePresence>
+        {playerMedia && (
+          <PlayerModal
+            item={playerMedia}
+            initialSeason={playerSeason}
+            initialEpisode={playerEpisode}
+            onClose={() => {
+              setPlayerMedia(null);
+            }}
+          />
+        )}
+      </AnimatePresence>
 
       {/* DETAIL MODAL */}
-      {detailMedia && (
-        <DetailModal
-          item={detailMedia}
-          onClose={() => setDetailMedia(null)}
-          onPlay={handlePlayMedia}
-          watchlist={watchlist}
-          onToggleWatchlist={handleToggleWatchlist}
-        />
-      )}
+      <AnimatePresence>
+        {detailMedia && (
+          <DetailModal
+            item={detailMedia}
+            onClose={() => setDetailMedia(null)}
+            onPlay={handlePlayMedia}
+            watchlist={watchlist}
+            onToggleWatchlist={handleToggleWatchlist}
+          />
+        )}
+      </AnimatePresence>
 
       {/* Toast Notification Banner */}
       <AnimatePresence>
