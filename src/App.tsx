@@ -16,6 +16,7 @@ import {
   Clock,
   Star,
   Zap,
+  CheckCircle2,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { MediaItem, MediaType } from './types';
@@ -30,9 +31,36 @@ import { MovieCard } from './components/MovieCard';
 import { PlayerModal } from './components/PlayerModal';
 import { DetailModal } from './components/DetailModal';
 
+interface WatchHistoryItem {
+  item: MediaItem;
+  season?: number;
+  episode?: number;
+  updatedAt: number;
+}
+
 export default function App() {
   const [activeTab, setActiveTab] = useState<string>('home');
   const [selectedProviderId, setSelectedProviderId] = useState<string | null>(null);
+
+  // Toast notification state
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  const showToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => {
+      setToastMessage((current) => (current === msg ? null : current));
+    }, 2800);
+  };
+
+  // Watch History / Continue Watching state
+  const [continueWatching, setContinueWatching] = useState<WatchHistoryItem[]>(() => {
+    try {
+      const saved = localStorage.getItem('freeflix_history');
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      return [];
+    }
+  });
 
   // Watchlist state (persistent in localStorage)
   const [watchlist, setWatchlist] = useState<MediaItem[]>(() => {
@@ -48,10 +76,13 @@ export default function App() {
     setWatchlist((prev) => {
       const exists = prev.some((i) => i.id === item.id);
       let next: MediaItem[];
+      const mediaTitle = item.title || item.name || 'Title';
       if (exists) {
         next = prev.filter((i) => i.id !== item.id);
+        showToast(`Removed "${mediaTitle}" from My Stuff`);
       } else {
         next = [item, ...prev];
+        showToast(`Saved "${mediaTitle}" to My Stuff`);
       }
       try {
         localStorage.setItem('freeflix_watchlist', JSON.stringify(next));
@@ -280,10 +311,50 @@ export default function App() {
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
+  // Keyboard shortcuts (Escape key listener)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (playerMedia) setPlayerMedia(null);
+        else if (detailMedia) setDetailMedia(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [playerMedia, detailMedia]);
+
   const handlePlayMedia = (item: MediaItem, season: number = 1, episode: number = 1) => {
     setPlayerMedia(item);
     setPlayerSeason(season);
     setPlayerEpisode(episode);
+
+    // Save item to Continue Watching history
+    setContinueWatching((prev) => {
+      const filtered = prev.filter((h) => h.item.id !== item.id);
+      const updated: WatchHistoryItem = {
+        item,
+        season,
+        episode,
+        updatedAt: Date.now(),
+      };
+      const next = [updated, ...filtered].slice(0, 12);
+      try {
+        localStorage.setItem('freeflix_history', JSON.stringify(next));
+      } catch (e) {}
+      return next;
+    });
+
+    const title = item.title || item.name || 'Title';
+    showToast(`Streaming ${title}${item.title ? '' : ` (S${season} E${episode})`}`);
+  };
+
+  const handleSurpriseMe = () => {
+    const pool = [...heroItems, ...popularMovies, ...topTv].filter(Boolean);
+    if (pool.length === 0) return;
+    const randomPick = pool[Math.floor(Math.random() * pool.length)];
+    setDetailMedia(randomPick);
+    const title = randomPick.title || randomPick.name || 'Title';
+    showToast(`Surprise Pick: "${title}"!`);
   };
 
   const handleMoreInfo = (item: MediaItem) => {
@@ -311,6 +382,7 @@ export default function App() {
           }
         }}
         onOpenSearch={() => setActiveTab('search')}
+        onSurpriseMe={handleSurpriseMe}
       />
 
       {/* Main View Area */}
@@ -496,6 +568,72 @@ export default function App() {
                 )}
 
                 <div className="space-y-8 px-2 sm:px-6 pt-4">
+                  {/* Continue Watching Row */}
+                  {continueWatching.length > 0 && (
+                    <div className="space-y-4 px-2 sm:px-6 my-2">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2.5">
+                          <span className="w-1.5 h-5 bg-white rounded-full inline-block shadow-[0_0_10px_white]" />
+                          <Clock className="w-5 h-5 text-white" />
+                          <h2 className="text-lg sm:text-2xl font-black text-white uppercase tracking-tight">
+                            Continue Watching
+                          </h2>
+                        </div>
+                        <button
+                          onClick={() => {
+                            setContinueWatching([]);
+                            localStorage.removeItem('freeflix_history');
+                            showToast('Cleared watching history');
+                          }}
+                          className="text-xs font-bold text-zinc-400 hover:text-white transition-colors flex items-center gap-1.5 bg-zinc-900/80 px-3 py-1.5 rounded-full border border-white/10"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          <span>Clear History</span>
+                        </button>
+                      </div>
+
+                      <div className="flex items-center gap-4 overflow-x-auto no-scrollbar py-2">
+                        {continueWatching.map(({ item, season, episode }) => {
+                          const title = item.title || item.name || 'Untitled';
+                          const isTv = (item.media_type || (item.name ? 'tv' : 'movie')) === 'tv';
+                          const poster = item.backdrop_path
+                            ? `https://image.tmdb.org/t/p/w500${item.backdrop_path}`
+                            : `https://image.tmdb.org/t/p/w500${item.poster_path}`;
+
+                          return (
+                            <div
+                              key={item.id}
+                              onClick={() => handlePlayMedia(item, season || 1, episode || 1)}
+                              className="group flex-shrink-0 w-48 sm:w-64 bg-zinc-900/90 rounded-2xl overflow-hidden border border-white/10 hover:border-white transition-all cursor-pointer shadow-xl transform hover:-translate-y-1"
+                            >
+                              <div className="relative aspect-video w-full overflow-hidden bg-black">
+                                <img
+                                  src={poster}
+                                  alt={title}
+                                  className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                                />
+                                <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                                  <div className="w-10 h-10 rounded-full bg-white text-black flex items-center justify-center shadow-2xl transform group-hover:scale-110 transition-transform">
+                                    <Play className="w-5 h-5 fill-black ml-0.5 text-black" />
+                                  </div>
+                                </div>
+                                <div className="absolute bottom-0 left-0 right-0 h-1 bg-zinc-800">
+                                  <div className="h-full bg-white w-2/3 shadow-[0_0_8px_white]" />
+                                </div>
+                              </div>
+                              <div className="p-3">
+                                <p className="font-extrabold text-xs sm:text-sm text-white line-clamp-1">{title}</p>
+                                <p className="text-[10px] text-zinc-400 font-bold uppercase mt-0.5">
+                                  {isTv ? `S${season || 1} E${episode || 1}` : 'Movie'} • Resume Play
+                                </p>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
                   <StreamingProvidersBar
                     selectedProviderId={selectedProviderId}
                     onSelectProvider={(id) => setSelectedProviderId(id)}
@@ -991,6 +1129,22 @@ export default function App() {
           onToggleWatchlist={handleToggleWatchlist}
         />
       )}
+
+      {/* Toast Notification Banner */}
+      <AnimatePresence>
+        {toastMessage && (
+          <motion.div
+            initial={{ opacity: 0, y: 20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.95 }}
+            transition={{ duration: 0.2 }}
+            className="fixed bottom-6 right-6 z-50 flex items-center gap-3 bg-zinc-900/95 text-white px-5 py-3.5 rounded-2xl border border-white/20 shadow-2xl backdrop-blur-xl max-w-md"
+          >
+            <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
+            <span className="text-xs sm:text-sm font-bold">{toastMessage}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Footer */}
       <footer className="mt-20 border-t border-zinc-800/80 pt-12 pb-8 text-center text-xs text-zinc-500 space-y-3 relative z-10 px-6">
