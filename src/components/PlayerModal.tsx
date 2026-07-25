@@ -20,7 +20,7 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({
   onClose,
   onProgressUpdate,
 }) => {
-  const [selectedServer, setSelectedServer] = useState<ServerOption>(STREAM_SERVERS[0]);
+  const [selectedServer, setSelectedServer] = useState<ServerOption>(STREAM_SERVERS[0]); // default server
   const [season, setSeason] = useState<number>(initialSeason);
   const [episode, setEpisode] = useState<number>(initialEpisode);
   const [totalSeasons, setTotalSeasons] = useState<number>(1);
@@ -30,9 +30,9 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({
 
   // Watch Progress & Duration tracking state
   const [progressPercentage, setProgressPercentage] = useState<number>(0);
-  const [currentTime, setCurrentTime] = useState<number>(0);
-  const [duration, setDuration] = useState<number>(item.title ? 7200 : 2700);
-  const [isPlaying, setIsPlaying] = useState<boolean>(false);
+  const [currentTime, setCurrentTime] = useState<number>(0); // in seconds
+  const [duration, setDuration] = useState<number>(item.title ? 7200 : 2700); // 2 hrs for movie, 45 mins for TV default
+  const [isPlaying, setIsPlaying] = useState<boolean>(false); // Starts paused until video loads/plays
 
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -42,6 +42,7 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({
   // Fetch TV / Movie duration and details from TMDB
   useEffect(() => {
     if (mediaType === 'tv') {
+      // 1. Fetch TV show main details
       fetchTMDB(`/tv/${item.id}`)
         .then((data) => {
           if (data.number_of_seasons) {
@@ -57,53 +58,57 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({
         })
         .catch(() => {});
 
-      fetchTMDB(`/tv/${item.id}/season/${season}/episode/${episode}`)
-        .then((epData) => {
-          if (epData && typeof epData.runtime === 'number' && epData.runtime > 0) {
-            setDuration(epData.runtime * 60);
-          }
-        })
-        .catch(() => {});
-    } else {
-      fetchTMDB(`/movie/${item.id}`)
-        .then((data) => {
-          if (data && typeof data.runtime === 'number' && data.runtime > 0) {
-            setDuration(data.runtime * 60);
-          }
-        })
-        .catch(() => {});
+      // 2. Fetch specific episode runtime details  
+      fetchTMDB(`/tv/${item.id}/season/${season}/episode/${episode}`)  
+        .then((epData) => {  
+          if (epData && typeof epData.runtime === 'number' && epData.runtime > 0) {  
+            setDuration(epData.runtime * 60);  
+          }  
+        })  
+        .catch(() => {});  
+    } else {  
+      // Fetch movie runtime details  
+      fetchTMDB(`/movie/${item.id}`)  
+        .then((data) => {  
+          if (data && typeof data.runtime === 'number' && data.runtime > 0) {  
+            setDuration(data.runtime * 60);  
+          }  
+        })  
+        .catch(() => {});  
     }
   }, [item.id, mediaType, season, episode]);
 
-  // Load previously saved progress
+  // Load previously saved continue watching progress & server choice
   useEffect(() => {
     const uniqueId = mediaType === 'tv' ? `tv-${item.id}` : `movie-${item.id}`;
     const list = getContinueWatchingList();
     const existing = list.find((x) => x.id === uniqueId || (x.tmdbId === item.id && x.mediaType === mediaType));
 
-    if (existing) {
-      if (existing.serverId) {
-        const savedServer = STREAM_SERVERS.find((s) => s.id === existing.serverId);
-        if (savedServer) setSelectedServer(savedServer);
-      }
-      if (existing.progressPercentage !== undefined) {
-        setProgressPercentage(existing.progressPercentage);
-      }
-      if (existing.currentTime !== undefined) {
-        setCurrentTime(existing.currentTime);
-      } else if (existing.progressPercentage && duration) {
-        setCurrentTime(Math.round((existing.progressPercentage / 100) * duration));
-      }
-      if (existing.duration) {
-        setDuration(existing.duration);
-      }
-    } else {
-      setProgressPercentage(0);
-      setCurrentTime(0);
+    if (existing) {  
+      if (existing.serverId) {  
+        const savedServer = STREAM_SERVERS.find((s) => s.id === existing.serverId);  
+        if (savedServer) {  
+          setSelectedServer(savedServer);  
+        }  
+      }  
+      if (existing.progressPercentage !== undefined) {  
+        setProgressPercentage(existing.progressPercentage);  
+      }  
+      if (existing.currentTime !== undefined) {  
+        setCurrentTime(existing.currentTime);  
+      } else if (existing.progressPercentage && duration) {  
+        setCurrentTime(Math.round((existing.progressPercentage / 100) * duration));  
+      }  
+      if (existing.duration) {  
+        setDuration(existing.duration);  
+      }  
+    } else {  
+      setProgressPercentage(0);  
+      setCurrentTime(0);  
     }
-  }, [item.id, mediaType, season, episode]);
+  }, [item.id, mediaType, season, episode, duration]);
 
-  // Document title updates
+  // Document title updates when watching
   useEffect(() => {
     const mediaTitle = item.title || item.name || 'Title';
     if (mediaType === 'tv') {
@@ -116,7 +121,7 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({
     };
   }, [item, mediaType, season, episode]);
 
-  // Handle save state on close/refresh
+  // OPTION 2: Handle tab close / refresh / page cut / AND block malicious redirects
   useEffect(() => {
     const handleSaveState = () => {
       const uniqueId = mediaType === 'tv' ? `tv-${item.id}` : `movie-${item.id}`;
@@ -139,17 +144,27 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({
       });
     };
 
-    window.addEventListener('beforeunload', handleSaveState);
-    window.addEventListener('pagehide', handleSaveState);
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      handleSaveState(); // Save state securely first
+      
+      // Prevent ad networks from silently redirecting the top window
+      e.preventDefault();
+      // Setting returnValue triggers the browser's "Leave site?" warning if an ad tries to hijack the page
+      e.returnValue = ''; 
+      return '';
+    };
 
-    return () => {
-      handleSaveState();
-      window.removeEventListener('beforeunload', handleSaveState);
-      window.removeEventListener('pagehide', handleSaveState);
+    window.addEventListener('beforeunload', handleBeforeUnload);  
+    window.addEventListener('pagehide', handleSaveState);  
+
+    return () => {  
+      handleSaveState(); // Save state on component unmount / modal close  
+      window.removeEventListener('beforeunload', handleBeforeUnload);  
+      window.removeEventListener('pagehide', handleSaveState);  
     };
   }, [item, mediaType, season, episode, title, progressPercentage, currentTime, duration, selectedServer.id]);
 
-  // Iframe message listener for progress/fullscreen
+  // Comprehensive listener for iframe duration / time update
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
       try {
@@ -157,48 +172,50 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({
         const data = typeof raw === 'string' ? JSON.parse(raw) : raw;
         if (!data || typeof data !== 'object') return;
 
-        const eventType = (data.event || data.type || data.status || '').toString().toLowerCase();
-        if (eventType.includes('play') || eventType.includes('start')) {
-          setIsPlaying(true);
-        } else if (eventType.includes('pause') || eventType.includes('stop') || eventType.includes('end')) {
-          setIsPlaying(false);
-        } else if (eventType.includes('fullscreen') || eventType.includes('requestfullscreen') || eventType.includes('enterfullscreen')) {
-          if (containerRef.current) {
-            if (containerRef.current.requestFullscreen) {
-              containerRef.current.requestFullscreen().catch(() => {});
-            } else if ((containerRef.current as any).webkitRequestFullscreen) {
-              (containerRef.current as any).webkitRequestFullscreen();
-            }
-          }
-        }
+        // Check for player state events  
+        const eventType = (data.event || data.type || data.status || '').toString().toLowerCase();  
+        if (eventType.includes('play') || eventType.includes('start')) {  
+          setIsPlaying(true);  
+        } else if (eventType.includes('pause') || eventType.includes('stop') || eventType.includes('end')) {  
+          setIsPlaying(false);  
+        } else if (eventType.includes('fullscreen') || eventType.includes('requestfullscreen') || eventType.includes('enterfullscreen')) {  
+          if (containerRef.current) {  
+            if (containerRef.current.requestFullscreen) {  
+              containerRef.current.requestFullscreen().catch(() => {});  
+            } else if ((containerRef.current as any).webkitRequestFullscreen) {  
+              (containerRef.current as any).webkitRequestFullscreen();  
+            }  
+          }  
+        }  
 
-        const payload = data.data || data.payload || data;
-        const cur = payload.currentTime ?? payload.time ?? payload.seconds ?? payload.position ?? payload.secondsWatched;
-        const dur = payload.duration ?? payload.totalDuration ?? payload.length;
-        const pct = payload.progress ?? payload.percentage ?? payload.percent;
+        const payload = data.data || data.payload || data;  
 
-        if (typeof cur === 'number' && typeof dur === 'number' && dur > 0) {
-          const calculatedPct = Math.min(100, Math.max(0, Math.round((cur / dur) * 100)));
-          setCurrentTime(Math.round(cur));
-          setDuration(Math.round(dur));
-          setProgressPercentage(calculatedPct);
-          setIsPlaying(true);
-        } else if (typeof pct === 'number' && pct > 0) {
-          const normalizedPct = Math.min(100, Math.max(0, Math.round(pct <= 1 ? pct * 100 : pct)));
-          setProgressPercentage(normalizedPct);
-          if (duration > 0) {
-            setCurrentTime(Math.round((normalizedPct / 100) * duration));
-          }
-          setIsPlaying(true);
-        }
-      } catch {}
-    };
+        const cur = payload.currentTime ?? payload.time ?? payload.seconds ?? payload.position ?? payload.secondsWatched;  
+        const dur = payload.duration ?? payload.totalDuration ?? payload.length;  
+        const pct = payload.progress ?? payload.percentage ?? payload.percent;  
 
-    window.addEventListener('message', handleMessage);
+        if (typeof cur === 'number' && typeof dur === 'number' && dur > 0) {  
+          const calculatedPct = Math.min(100, Math.max(0, Math.round((cur / dur) * 100)));  
+          setCurrentTime(Math.round(cur));  
+          setDuration(Math.round(dur));  
+          setProgressPercentage(calculatedPct);  
+          setIsPlaying(true); 
+        } else if (typeof pct === 'number' && pct > 0) {  
+          const normalizedPct = Math.min(100, Math.max(0, Math.round(pct <= 1 ? pct * 100 : pct)));  
+          setProgressPercentage(normalizedPct);  
+          if (duration > 0) {  
+            setCurrentTime(Math.round((normalizedPct / 100) * duration));  
+          }  
+          setIsPlaying(true);  
+        }  
+      } catch {}  
+    };  
+
+    window.addEventListener('message', handleMessage);  
     return () => window.removeEventListener('message', handleMessage);
   }, [duration]);
 
-  // Save updated progress & notify parent
+  // Save updated progress to local storage and notify parent component
   useEffect(() => {
     const uniqueId = mediaType === 'tv' ? `tv-${item.id}` : `movie-${item.id}`;
     saveContinueWatchingItem({
@@ -230,6 +247,18 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
   }, []);
 
+  // Handle ESC key or Fullscreen trigger
+  const toggleFullScreen = () => {
+    if (!containerRef.current) return;
+    if (!document.fullscreenElement) {
+      containerRef.current.requestFullscreen().catch((err) => {
+        console.error('Fullscreen request failed:', err);
+      });
+    } else {
+      document.exitFullscreen().catch(() => {});
+    }
+  };
+
   const currentEmbedUrl = selectedServer.getUrl(item.id, mediaType, season, episode);
 
   const handleNextEpisode = () => {
@@ -251,11 +280,13 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({
     >
       {/* Top Navigation Bar */}
       <div className="w-full px-4 sm:px-8 py-4 sm:py-5 bg-gradient-to-b from-black/90 via-black/50 to-transparent flex items-center justify-between z-30 pointer-events-none transition-all duration-300 opacity-100 hover:opacity-100">
+        
+        {/* Left Title & Season/Episode details */}
         <div className="flex items-center gap-4 pointer-events-auto">
-          <button
-            onClick={onClose}
-            className="p-2 sm:p-2.5 rounded-full bg-zinc-900/80 border border-white/10 text-white hover:bg-white hover:text-black hover:scale-110 transition-all backdrop-blur-md shadow-lg"
-            title="Close player"
+          <button  
+            onClick={onClose}  
+            className="p-2 sm:p-2.5 rounded-full bg-zinc-900/80 border border-white/10 text-white hover:bg-white hover:text-black hover:scale-110 transition-all backdrop-blur-md shadow-lg"  
+            title="Close player"  
           >
             <X className="w-5 h-5 sm:w-6 sm:h-6" />
           </button>
@@ -276,127 +307,124 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({
           </div>
         </div>
 
-        {/* Server Picker */}
-        <div className="flex items-center gap-2 sm:gap-4 pointer-events-auto">
-          <div className="relative">
-            <button
-              onClick={() => setShowServerMenu(!showServerMenu)}
-              className="flex items-center gap-2 bg-zinc-900/80 border border-white/20 hover:border-white text-white px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold shadow-xl transition-all backdrop-blur-md"
-            >
-              <Server className="w-4 h-4 text-white" />
-              <span className="hidden sm:inline tracking-wide">{selectedServer.name}</span>
-              <span className="sm:hidden tracking-wide">{selectedServer.id.toUpperCase()}</span>
-              <ChevronDown className="w-4 h-4 text-zinc-400" />
-            </button>
+        {/* Right Server Picker */}  
+        <div className="flex items-center gap-2 sm:gap-4 pointer-events-auto">  
+          <div className="relative">  
+            <button  
+              onClick={() => setShowServerMenu(!showServerMenu)}  
+              className="flex items-center gap-2 bg-zinc-900/80 border border-white/20 hover:border-white text-white px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold shadow-xl transition-all backdrop-blur-md"  
+            >  
+              <Server className="w-4 h-4 text-white" />  
+              <span className="hidden sm:inline tracking-wide">{selectedServer.name}</span>  
+              <span className="sm:hidden tracking-wide">{selectedServer.id.toUpperCase()}</span>  
+              <ChevronDown className="w-4 h-4 text-zinc-400" />  
+            </button>  
 
-            {showServerMenu && (
-              <div className="absolute right-0 mt-3 w-64 bg-zinc-900/95 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl z-50 p-2 space-y-1 max-h-80 overflow-y-auto">
-                <div className="text-[10px] font-black uppercase text-zinc-500 px-3 py-2 tracking-wider">
-                  Select Streaming Server
-                </div>
-                {STREAM_SERVERS.map((server) => {
-                  const isSelected = server.id === selectedServer.id;
-                  return (
-                    <button
-                      key={server.id}
-                      onClick={() => {
-                        setSelectedServer(server);
-                        setShowServerMenu(false);
-                      }}
-                      className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-left transition-all ${
-                        isSelected
-                          ? 'bg-white text-black shadow-lg font-black'
-                          : 'text-zinc-300 hover:bg-zinc-800 hover:text-white'
-                      }`}
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <span className="tracking-wide">{server.name}</span>
-                        {server.badge && (
-                          <span className="text-[9px] bg-black/50 px-1.5 py-0.5 rounded border border-white/10 font-black text-white uppercase">
-                            {server.badge}
-                          </span>
-                        )}
-                      </div>
-                      {isSelected && <Check className="w-4 h-4 text-black" />}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
+            {showServerMenu && (  
+              <div className="absolute right-0 mt-3 w-64 bg-zinc-900/95 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl z-50 p-2 space-y-1 max-h-80 overflow-y-auto">  
+                <div className="text-[10px] font-black uppercase text-zinc-500 px-3 py-2 tracking-wider">  
+                  Select Streaming Server  
+                </div>  
+                {STREAM_SERVERS.map((server) => {  
+                  const isSelected = server.id === selectedServer.id;  
+                  return (  
+                    <button  
+                      key={server.id}  
+                      onClick={() => {  
+                        setSelectedServer(server);  
+                        setShowServerMenu(false);  
+                      }}  
+                      className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-left transition-all ${  
+                        isSelected  
+                          ? 'bg-white text-black shadow-lg font-black'  
+                          : 'text-zinc-300 hover:bg-zinc-800 hover:text-white'  
+                      }`}  
+                    >  
+                      <div className="flex items-center gap-2.5">  
+                        <span className="tracking-wide">{server.name}</span>  
+                        {server.badge && (  
+                          <span className="text-[9px] bg-black/50 px-1.5 py-0.5 rounded border border-white/10 font-black text-white uppercase">  
+                            {server.badge}  
+                          </span>  
+                        )}  
+                      </div>  
+                      {isSelected && <Check className="w-4 h-4 text-black" />}  
+                    </button>  
+                  );  
+                })}  
+              </div>  
+            )}  
+          </div>  
+        </div>  
+      </div>  
 
-      {/* 
-        ========================================================================
-        THE FIX: ULTRA-STRICT SANDBOX IFRAME
-        This allows the video to play but physically blocks popups and redirects. 
-        ======================================================================== 
-      */}
-      <div ref={containerRef} className="relative flex-1 w-full bg-black flex items-center justify-center overflow-hidden">
-        <iframe
-          src={currentEmbedUrl}
-          title={title}
-          className="w-full h-full border-0 absolute inset-0 bg-black z-50"
-          allow="autoplay; fullscreen; picture-in-picture"
-          allowFullScreen={true}
-          // @ts-ignore
-          webkitallowfullscreen="true"
-          // @ts-ignore
-          mozallowfullscreen="true"
-          sandbox="allow-scripts allow-same-origin allow-presentation"
-        />
-      </div>
+      {/* Video Player Frame Container - NO SANDBOX */}  
+      <div ref={containerRef} className="relative flex-1 w-full bg-black flex items-center justify-center overflow-hidden">  
+        <iframe  
+          src={currentEmbedUrl}  
+          title={title}  
+          className="w-full h-full border-0 absolute inset-0"  
+          allow="autoplay *; fullscreen *; encrypted-media *; picture-in-picture *; accelerometer *; gyroscope *; clipboard-write *; web-share *"  
+          allowFullScreen={true}  
+          // @ts-ignore  
+          webkitallowfullscreen="true"  
+          // @ts-ignore  
+          mozallowfullscreen="true"  
+        />  
+      </div>  
 
-      {/* Bottom TV Season / Episode Picker & Server Info Bar */}
-      <div className="w-full px-4 sm:px-8 py-4 bg-gradient-to-t from-black via-black/80 to-transparent flex flex-wrap items-center justify-between gap-3 z-30 pointer-events-none transition-all duration-300 opacity-100 hover:opacity-100">
-        <div className="flex items-center gap-3 pointer-events-auto">
-          {mediaType === 'tv' && (
-            <>
-              <div className="flex items-center gap-2 bg-zinc-900/80 backdrop-blur-md border border-white/10 rounded-xl pl-3 pr-1 py-1 shadow-lg">
-                <span className="text-[10px] sm:text-xs text-zinc-400 font-bold uppercase tracking-wider">Season</span>
-                <select
-                  value={season}
-                  onChange={(e) => {
-                    setSeason(Number(e.target.value));
-                    setEpisode(1);
-                  }}
-                  className="bg-zinc-800/80 hover:bg-zinc-700 text-white font-bold rounded-lg px-2 py-1 sm:py-1.5 text-xs sm:text-sm focus:outline-none focus:ring-1 focus:ring-white transition-colors cursor-pointer appearance-none outline-none border-none"
-                >
-                  {Array.from({ length: totalSeasons }, (_, i) => i + 1).map((s) => (
-                    <option key={s} value={s}>
-                      {s}
-                    </option>
-                  ))}
-                </select>
-              </div>
+      {/* Bottom TV Season / Episode Picker & Server Info Bar */}  
+      <div className="w-full px-4 sm:px-8 py-4 bg-gradient-to-t from-black via-black/80 to-transparent flex flex-wrap items-center justify-between gap-3 z-30 pointer-events-none transition-all duration-300 opacity-100 hover:opacity-100">  
+        <div className="flex items-center gap-3 pointer-events-auto">  
+          {mediaType === 'tv' && (  
+            <>  
+              {/* Season Select */}  
+              <div className="flex items-center gap-2 bg-zinc-900/80 backdrop-blur-md border border-white/10 rounded-xl pl-3 pr-1 py-1 shadow-lg">  
+                <span className="text-[10px] sm:text-xs text-zinc-400 font-bold uppercase tracking-wider">Season</span>  
+                <select  
+                  value={season}  
+                  onChange={(e) => {  
+                    setSeason(Number(e.target.value));  
+                    setEpisode(1);  
+                  }}  
+                  className="bg-zinc-800/80 hover:bg-zinc-700 text-white font-bold rounded-lg px-2 py-1 sm:py-1.5 text-xs sm:text-sm focus:outline-none focus:ring-1 focus:ring-white transition-colors cursor-pointer appearance-none outline-none border-none"  
+                >  
+                  {Array.from({ length: totalSeasons }, (_, i) => i + 1).map((s) => (  
+                    <option key={s} value={s}>  
+                      {s}  
+                    </option>  
+                  ))}  
+                </select>  
+              </div>  
 
-              <div className="flex items-center gap-2 bg-zinc-900/80 backdrop-blur-md border border-white/10 rounded-xl pl-3 pr-1 py-1 shadow-lg">
-                <span className="text-[10px] sm:text-xs text-zinc-400 font-bold uppercase tracking-wider">Episode</span>
-                <select
-                  value={episode}
-                  onChange={(e) => setEpisode(Number(e.target.value))}
-                  className="bg-zinc-800/80 hover:bg-zinc-700 text-white font-bold rounded-lg px-2 py-1 sm:py-1.5 text-xs sm:text-sm focus:outline-none focus:ring-1 focus:ring-white transition-colors cursor-pointer appearance-none outline-none border-none"
-                >
-                  {Array.from({ length: episodesInSeason }, (_, i) => i + 1).map((eNum) => (
-                    <option key={eNum} value={eNum}>
-                      {eNum}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              {/* Episode Select */}  
+              <div className="flex items-center gap-2 bg-zinc-900/80 backdrop-blur-md border border-white/10 rounded-xl pl-3 pr-1 py-1 shadow-lg">  
+                <span className="text-[10px] sm:text-xs text-zinc-400 font-bold uppercase tracking-wider">Episode</span>  
+                <select  
+                  value={episode}  
+                  onChange={(e) => setEpisode(Number(e.target.value))}  
+                  className="bg-zinc-800/80 hover:bg-zinc-700 text-white font-bold rounded-lg px-2 py-1 sm:py-1.5 text-xs sm:text-sm focus:outline-none focus:ring-1 focus:ring-white transition-colors cursor-pointer appearance-none outline-none border-none"  
+                >  
+                  {Array.from({ length: episodesInSeason }, (_, i) => i + 1).map((eNum) => (  
+                    <option key={eNum} value={eNum}>  
+                      {eNum}  
+                    </option>  
+                  ))}  
+                </select>  
+              </div>  
 
-              <button
-                onClick={handleNextEpisode}
-                className="flex items-center gap-2 bg-white hover:bg-zinc-200 text-black text-[10px] sm:text-xs font-black uppercase tracking-wider px-4 py-2 sm:py-2.5 rounded-xl transition-all shadow-lg hover:scale-105"
-              >
-                <span>Next Ep</span>
-                <SkipForward className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-black text-black" />
-              </button>
-            </>
-          )}
-        </div>
-      </div>
+              {/* Next Episode Button */}  
+              <button  
+                onClick={handleNextEpisode}  
+                className="flex items-center gap-2 bg-white hover:bg-zinc-200 text-black text-[10px] sm:text-xs font-black uppercase tracking-wider px-4 py-2 sm:py-2.5 rounded-xl transition-all shadow-lg hover:scale-105"  
+              >  
+                <span>Next Ep</span>  
+                <SkipForward className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-black text-black" />  
+              </button>  
+            </>  
+          )}  
+        </div>  
+      </div>  
     </motion.div>
   );
 };
