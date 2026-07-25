@@ -180,7 +180,7 @@ export const STREAMING_PROVIDERS: StreamingProvider[] = [
     id: 'pluto',
     name: 'Pluto TV',
     badgeColor: '#FFDF00',
-    logoSvg: 'https://en.wikipedia.org/wiki/Pluto_TV',
+    logoSvg: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRpIzczlWCXhX2LYNAQCsgCgNvIs8s-Oxwz2Zw9MCfoyA&s',
     providerId: 300,
     invertOnDark: false,
   },
