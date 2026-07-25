@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Server, SkipForward, Check, ChevronDown } from 'lucide-react';
-import { motion } from 'motion/react';
+import { X, Server, SkipForward, Tv, Film, Check, AlertCircle, Play, Pause, ChevronDown, Clock, RotateCcw } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 import { MediaItem, MediaType, ServerOption } from '../types';
 import { STREAM_SERVERS, fetchTMDB } from '../services/tmdb';
 import { saveContinueWatchingItem, getContinueWatchingList } from '../services/storage';
@@ -11,85 +11,6 @@ interface PlayerModalProps {
   initialEpisode?: number;
   onClose: () => void;
   onProgressUpdate?: () => void;
-}
-
-const CLEANUP_SELECTORS = [
-  '[id*="ad"]',
-  '[class*="ad"]',
-  '[id*="ads"]',
-  '[class*="ads"]',
-  '[id*="popup"]',
-  '[class*="popup"]',
-  '[id*="modal"]',
-  '[class*="modal"]',
-  '[id*="overlay"]',
-  '[class*="overlay"]',
-  '[id*="redirect"]',
-  '[class*="redirect"]',
-  '[id*="popunder"]',
-  '[class*="popunder"]',
-  '[id*="interstitial"]',
-  '[class*="interstitial"]',
-  '[id*="banner"]',
-  '[class*="banner"]',
-  '[id*="sponsor"]',
-  '[class*="sponsor"]',
-  'iframe[src*="ads"]',
-  'iframe[src*="doubleclick"]',
-  'iframe[src*="googlesyndication"]',
-  'iframe[src*="pop"]',
-].join(',');
-
-function safeRemoveNode(node: Element) {
-  try {
-    const el = node as HTMLElement;
-    if (!el) return;
-
-    const style = window.getComputedStyle(el);
-    const z = Number.parseInt(style.zIndex || '0', 10);
-
-    const looksLikeOverlay =
-      style.position === 'fixed' ||
-      style.position === 'absolute' ||
-      style.position === 'sticky' ||
-      z >= 50 ||
-      el.getBoundingClientRect().width >= window.innerWidth * 0.5 ||
-      el.getBoundingClientRect().height >= window.innerHeight * 0.35;
-
-    const isSmallBadge = el.getBoundingClientRect().width < 40 && el.getBoundingClientRect().height < 40;
-    if (!isSmallBadge && looksLikeOverlay) {
-      el.remove();
-      return;
-    }
-
-    el.remove();
-  } catch {
-    try {
-      node.remove();
-    } catch {}
-  }
-}
-
-function cleanupDocument(root: ParentNode = document) {
-  try {
-    const nodes = root.querySelectorAll(CLEANUP_SELECTORS);
-    nodes.forEach((node) => safeRemoveNode(node));
-  } catch {}
-}
-
-function cleanupSameOriginFrames() {
-  const iframes = Array.from(document.querySelectorAll('iframe'));
-  for (const frame of iframes) {
-    try {
-      const doc = frame.contentDocument;
-      if (doc?.body) {
-        cleanupDocument(doc);
-      }
-    } catch {
-      // Cross-origin iframe: browser security blocks access.
-      // We can still clean the parent page, but not the iframe contents.
-    }
-  }
 }
 
 export const PlayerModal: React.FC<PlayerModalProps> = ({
@@ -107,6 +28,7 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
   const [showServerMenu, setShowServerMenu] = useState<boolean>(false);
 
+  // Watch Progress & Duration tracking state
   const [progressPercentage, setProgressPercentage] = useState<number>(0);
   const [currentTime, setCurrentTime] = useState<number>(0);
   const [duration, setDuration] = useState<number>(item.title ? 7200 : 2700);
@@ -117,6 +39,7 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({
   const mediaType: MediaType = item.media_type || (item.title ? 'movie' : 'tv');
   const title = item.title || item.name || 'Title';
 
+  // Fetch TV / Movie duration and details from TMDB
   useEffect(() => {
     if (mediaType === 'tv') {
       fetchTMDB(`/tv/${item.id}`)
@@ -128,7 +51,7 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({
           if (s?.episode_count) {
             setEpisodesInSeason(s.episode_count);
           }
-          if (data.episode_run_time?.length > 0) {
+          if (data.episode_run_time && data.episode_run_time.length > 0) {
             setDuration(data.episode_run_time[0] * 60);
           }
         })
@@ -152,6 +75,7 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({
     }
   }, [item.id, mediaType, season, episode]);
 
+  // Load previously saved progress
   useEffect(() => {
     const uniqueId = mediaType === 'tv' ? `tv-${item.id}` : `movie-${item.id}`;
     const list = getContinueWatchingList();
@@ -179,6 +103,7 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({
     }
   }, [item.id, mediaType, season, episode]);
 
+  // Document title updates
   useEffect(() => {
     const mediaTitle = item.title || item.name || 'Title';
     if (mediaType === 'tv') {
@@ -191,6 +116,7 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({
     };
   }, [item, mediaType, season, episode]);
 
+  // Handle save state on close/refresh
   useEffect(() => {
     const handleSaveState = () => {
       const uniqueId = mediaType === 'tv' ? `tv-${item.id}` : `movie-${item.id}`;
@@ -223,6 +149,7 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({
     };
   }, [item, mediaType, season, episode, title, progressPercentage, currentTime, duration, selectedServer.id]);
 
+  // Iframe message listener for progress/fullscreen
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
       try {
@@ -271,6 +198,7 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({
     return () => window.removeEventListener('message', handleMessage);
   }, [duration]);
 
+  // Save updated progress & notify parent
   useEffect(() => {
     const uniqueId = mediaType === 'tv' ? `tv-${item.id}` : `movie-${item.id}`;
     saveContinueWatchingItem({
@@ -293,6 +221,7 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({
     if (onProgressUpdate) onProgressUpdate();
   }, [item, mediaType, season, episode, title, progressPercentage, currentTime, duration, selectedServer.id, onProgressUpdate]);
 
+  // Fullscreen change listener
   useEffect(() => {
     const handleFullscreenChange = () => {
       setIsFullscreen(!!document.fullscreenElement);
@@ -300,58 +229,6 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({
     document.addEventListener('fullscreenchange', handleFullscreenChange);
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
   }, []);
-
-  useEffect(() => {
-    let alive = true;
-
-    const scan = () => {
-      if (!alive) return;
-      cleanupDocument(document);
-      cleanupSameOriginFrames();
-    };
-
-    scan();
-
-    const observer = new MutationObserver(() => {
-      scan();
-    });
-
-    observer.observe(document.documentElement, {
-      childList: true,
-      subtree: true,
-      attributes: true,
-      attributeFilter: ['class', 'id', 'style', 'src'],
-    });
-
-    const interval = window.setInterval(scan, 1000);
-
-    const onFocus = () => scan();
-    const onVisibility = () => {
-      if (!document.hidden) scan();
-    };
-
-    window.addEventListener('focus', onFocus);
-    document.addEventListener('visibilitychange', onVisibility);
-
-    return () => {
-      alive = false;
-      observer.disconnect();
-      window.clearInterval(interval);
-      window.removeEventListener('focus', onFocus);
-      document.removeEventListener('visibilitychange', onVisibility);
-    };
-  }, [selectedServer.id, item.id, mediaType, season, episode]);
-
-  const toggleFullScreen = () => {
-    if (!containerRef.current) return;
-    if (!document.fullscreenElement) {
-      containerRef.current.requestFullscreen().catch((err) => {
-        console.error('Fullscreen request failed:', err);
-      });
-    } else {
-      document.exitFullscreen().catch(() => {});
-    }
-  };
 
   const currentEmbedUrl = selectedServer.getUrl(item.id, mediaType, season, episode);
 
@@ -372,6 +249,7 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({
       transition={{ duration: 0.3 }}
       className="fixed inset-0 z-50 bg-black/95 backdrop-blur-3xl flex flex-col justify-between"
     >
+      {/* Top Navigation Bar */}
       <div className="w-full px-4 sm:px-8 py-4 sm:py-5 bg-gradient-to-b from-black/90 via-black/50 to-transparent flex items-center justify-between z-30 pointer-events-none transition-all duration-300 opacity-100 hover:opacity-100">
         <div className="flex items-center gap-4 pointer-events-auto">
           <button
@@ -398,6 +276,7 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({
           </div>
         </div>
 
+        {/* Server Picker */}
         <div className="flex items-center gap-2 sm:gap-4 pointer-events-auto">
           <div className="relative">
             <button
@@ -448,20 +327,28 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({
         </div>
       </div>
 
+      {/* 
+        ========================================================================
+        THE FIX: ULTRA-STRICT SANDBOX IFRAME
+        This allows the video to play but physically blocks popups and redirects. 
+        ======================================================================== 
+      */}
       <div ref={containerRef} className="relative flex-1 w-full bg-black flex items-center justify-center overflow-hidden">
         <iframe
           src={currentEmbedUrl}
           title={title}
-          className="w-full h-full border-0 absolute inset-0"
-          allow="autoplay *; fullscreen *; encrypted-media *; picture-in-picture *; accelerometer *; gyroscope *; clipboard-write *; web-share *"
+          className="w-full h-full border-0 absolute inset-0 bg-black z-50"
+          allow="autoplay; fullscreen; picture-in-picture"
           allowFullScreen={true}
           // @ts-ignore
           webkitallowfullscreen="true"
           // @ts-ignore
           mozallowfullscreen="true"
+          sandbox="allow-scripts allow-same-origin allow-presentation"
         />
       </div>
 
+      {/* Bottom TV Season / Episode Picker & Server Info Bar */}
       <div className="w-full px-4 sm:px-8 py-4 bg-gradient-to-t from-black via-black/80 to-transparent flex flex-wrap items-center justify-between gap-3 z-30 pointer-events-none transition-all duration-300 opacity-100 hover:opacity-100">
         <div className="flex items-center gap-3 pointer-events-auto">
           {mediaType === 'tv' && (
@@ -510,4 +397,6 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({
           )}
         </div>
       </div>
- 
+    </motion.div>
+  );
+};
