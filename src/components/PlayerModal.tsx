@@ -20,7 +20,7 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({
   onClose,
   onProgressUpdate,
 }) => {
-  const [selectedServer, setSelectedServer] = useState<ServerOption>(STREAM_SERVERS[0]); // default server
+  const [selectedServer, setSelectedServer] = useState<ServerOption>(STREAM_SERVERS[0]); 
   const [season, setSeason] = useState<number>(initialSeason);
   const [episode, setEpisode] = useState<number>(initialEpisode);
   const [totalSeasons, setTotalSeasons] = useState<number>(1);
@@ -30,9 +30,9 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({
 
   // Watch Progress & Duration tracking state
   const [progressPercentage, setProgressPercentage] = useState<number>(0);
-  const [currentTime, setCurrentTime] = useState<number>(0); // in seconds
-  const [duration, setDuration] = useState<number>(item.title ? 7200 : 2700); // 2 hrs for movie, 45 mins for TV default
-  const [isPlaying, setIsPlaying] = useState<boolean>(false); // Starts paused until video loads/plays
+  const [currentTime, setCurrentTime] = useState<number>(0);
+  const [duration, setDuration] = useState<number>(item.title ? 7200 : 2700); 
+  const [isPlaying, setIsPlaying] = useState<boolean>(false);
 
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -42,23 +42,17 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({
   // Fetch TV / Movie duration and details from TMDB
   useEffect(() => {
     if (mediaType === 'tv') {
-      // 1. Fetch TV show main details
       fetchTMDB(`/tv/${item.id}`)
         .then((data) => {
-          if (data.number_of_seasons) {
-            setTotalSeasons(data.number_of_seasons);
-          }
+          if (data.number_of_seasons) setTotalSeasons(data.number_of_seasons);
           const s = data.seasons?.find((x: { season_number: number }) => x.season_number === season);
-          if (s?.episode_count) {
-            setEpisodesInSeason(s.episode_count);
-          }
+          if (s?.episode_count) setEpisodesInSeason(s.episode_count);
           if (data.episode_run_time && data.episode_run_time.length > 0) {
             setDuration(data.episode_run_time[0] * 60);
           }
         })
         .catch(() => {});
 
-      // 2. Fetch specific episode runtime details  
       fetchTMDB(`/tv/${item.id}/season/${season}/episode/${episode}`)  
         .then((epData) => {  
           if (epData && typeof epData.runtime === 'number' && epData.runtime > 0) {  
@@ -67,7 +61,6 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({
         })  
         .catch(() => {});  
     } else {  
-      // Fetch movie runtime details  
       fetchTMDB(`/movie/${item.id}`)  
         .then((data) => {  
           if (data && typeof data.runtime === 'number' && data.runtime > 0) {  
@@ -78,7 +71,8 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({
     }
   }, [item.id, mediaType, season, episode]);
 
-  // Load previously saved continue watching progress & server choice
+  // Load previously saved continue watching progress & server choice 
+  // FIX: Removed 'duration' dependency to prevent it from constantly overwriting your server choice!
   useEffect(() => {
     const uniqueId = mediaType === 'tv' ? `tv-${item.id}` : `movie-${item.id}`;
     const list = getContinueWatchingList();
@@ -87,18 +81,14 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({
     if (existing) {  
       if (existing.serverId) {  
         const savedServer = STREAM_SERVERS.find((s) => s.id === existing.serverId);  
-        if (savedServer) {  
-          setSelectedServer(savedServer);  
-        }  
+        if (savedServer) setSelectedServer(savedServer);  
       }  
       if (existing.progressPercentage !== undefined) {  
         setProgressPercentage(existing.progressPercentage);  
       }  
       if (existing.currentTime !== undefined) {  
         setCurrentTime(existing.currentTime);  
-      } else if (existing.progressPercentage && duration) {  
-        setCurrentTime(Math.round((existing.progressPercentage / 100) * duration));  
-      }  
+      } 
       if (existing.duration) {  
         setDuration(existing.duration);  
       }  
@@ -106,22 +96,19 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({
       setProgressPercentage(0);  
       setCurrentTime(0);  
     }
-  }, [item.id, mediaType, season, episode, duration]);
+  }, [item.id, mediaType, season, episode]);
 
   // Document title updates when watching
   useEffect(() => {
     const mediaTitle = item.title || item.name || 'Title';
-    if (mediaType === 'tv') {
-      document.title = `Watching ${mediaTitle} (S${season}:E${episode}) - FREEFLIX`;
-    } else {
-      document.title = `Watching ${mediaTitle} - FREEFLIX`;
-    }
-    return () => {
-      document.title = 'FREEFLIX - Stream Movies & TV Shows';
-    };
+    document.title = mediaType === 'tv' 
+      ? `Watching ${mediaTitle} (S${season}:E${episode}) - FREEFLIX`
+      : `Watching ${mediaTitle} - FREEFLIX`;
+
+    return () => { document.title = 'FREEFLIX - Stream Movies & TV Shows'; };
   }, [item, mediaType, season, episode]);
 
-  // OPTION 2: Handle tab close / refresh / page cut / AND block malicious redirects
+  // Handle save state and KILL malicious redirects
   useEffect(() => {
     const handleSaveState = () => {
       const uniqueId = mediaType === 'tv' ? `tv-${item.id}` : `movie-${item.id}`;
@@ -142,27 +129,29 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({
         completed: progressPercentage >= 95,
         serverId: selectedServer.id,
       });
+      if (onProgressUpdate) onProgressUpdate();
     };
 
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      handleSaveState(); // Save state securely first
-      
-      // Prevent ad networks from silently redirecting the top window
+      handleSaveState(); 
       e.preventDefault();
-      // Setting returnValue triggers the browser's "Leave site?" warning if an ad tries to hijack the page
-      e.returnValue = ''; 
+      e.returnValue = ''; // Triggers browser warning if an ad tries to hijack the page
       return '';
     };
 
     window.addEventListener('beforeunload', handleBeforeUnload);  
     window.addEventListener('pagehide', handleSaveState);  
 
+    // Debounce save to prevent local storage spam on every second
+    const saveInterval = setInterval(handleSaveState, 5000);
+
     return () => {  
-      handleSaveState(); // Save state on component unmount / modal close  
+      clearInterval(saveInterval);
+      handleSaveState(); 
       window.removeEventListener('beforeunload', handleBeforeUnload);  
       window.removeEventListener('pagehide', handleSaveState);  
     };
-  }, [item, mediaType, season, episode, title, progressPercentage, currentTime, duration, selectedServer.id]);
+  }, [item, mediaType, season, episode, title, progressPercentage, currentTime, duration, selectedServer.id, onProgressUpdate]);
 
   // Comprehensive listener for iframe duration / time update
   useEffect(() => {
@@ -172,7 +161,6 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({
         const data = typeof raw === 'string' ? JSON.parse(raw) : raw;
         if (!data || typeof data !== 'object') return;
 
-        // Check for player state events  
         const eventType = (data.event || data.type || data.status || '').toString().toLowerCase();  
         if (eventType.includes('play') || eventType.includes('start')) {  
           setIsPlaying(true);  
@@ -189,7 +177,6 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({
         }  
 
         const payload = data.data || data.payload || data;  
-
         const cur = payload.currentTime ?? payload.time ?? payload.seconds ?? payload.position ?? payload.secondsWatched;  
         const dur = payload.duration ?? payload.totalDuration ?? payload.length;  
         const pct = payload.progress ?? payload.percentage ?? payload.percent;  
@@ -203,9 +190,7 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({
         } else if (typeof pct === 'number' && pct > 0) {  
           const normalizedPct = Math.min(100, Math.max(0, Math.round(pct <= 1 ? pct * 100 : pct)));  
           setProgressPercentage(normalizedPct);  
-          if (duration > 0) {  
-            setCurrentTime(Math.round((normalizedPct / 100) * duration));  
-          }  
+          if (duration > 0) setCurrentTime(Math.round((normalizedPct / 100) * duration));  
           setIsPlaying(true);  
         }  
       } catch {}  
@@ -215,49 +200,11 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({
     return () => window.removeEventListener('message', handleMessage);
   }, [duration]);
 
-  // Save updated progress to local storage and notify parent component
   useEffect(() => {
-    const uniqueId = mediaType === 'tv' ? `tv-${item.id}` : `movie-${item.id}`;
-    saveContinueWatchingItem({
-      id: uniqueId,
-      tmdbId: item.id,
-      mediaType,
-      title,
-      posterPath: item.poster_path,
-      backdropPath: item.backdrop_path,
-      progressPercentage,
-      currentTime,
-      duration,
-      season: mediaType === 'tv' ? season : undefined,
-      episode: mediaType === 'tv' ? episode : undefined,
-      certification: item.certification,
-      voteAverage: item.vote_average,
-      completed: progressPercentage >= 95,
-      serverId: selectedServer.id,
-    });
-    if (onProgressUpdate) onProgressUpdate();
-  }, [item, mediaType, season, episode, title, progressPercentage, currentTime, duration, selectedServer.id, onProgressUpdate]);
-
-  // Fullscreen change listener
-  useEffect(() => {
-    const handleFullscreenChange = () => {
-      setIsFullscreen(!!document.fullscreenElement);
-    };
+    const handleFullscreenChange = () => setIsFullscreen(!!document.fullscreenElement);
     document.addEventListener('fullscreenchange', handleFullscreenChange);
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
   }, []);
-
-  // Handle ESC key or Fullscreen trigger
-  const toggleFullScreen = () => {
-    if (!containerRef.current) return;
-    if (!document.fullscreenElement) {
-      containerRef.current.requestFullscreen().catch((err) => {
-        console.error('Fullscreen request failed:', err);
-      });
-    } else {
-      document.exitFullscreen().catch(() => {});
-    }
-  };
 
   const currentEmbedUrl = selectedServer.getUrl(item.id, mediaType, season, episode);
 
@@ -279,7 +226,7 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({
       className="fixed inset-0 z-50 bg-black/95 backdrop-blur-3xl flex flex-col justify-between"
     >
       {/* Top Navigation Bar */}
-      <div className="w-full px-4 sm:px-8 py-4 sm:py-5 bg-gradient-to-b from-black/90 via-black/50 to-transparent flex items-center justify-between z-30 pointer-events-none transition-all duration-300 opacity-100 hover:opacity-100">
+      <div className="w-full px-4 sm:px-8 py-4 sm:py-5 bg-gradient-to-b from-black/90 via-black/50 to-transparent flex items-center justify-between z-30 pointer-events-none transition-all duration-300">
         
         {/* Left Title & Season/Episode details */}
         <div className="flex items-center gap-4 pointer-events-auto">
@@ -312,55 +259,67 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({
           <div className="relative">  
             <button  
               onClick={() => setShowServerMenu(!showServerMenu)}  
-              className="flex items-center gap-2 bg-zinc-900/80 border border-white/20 hover:border-white text-white px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold shadow-xl transition-all backdrop-blur-md"  
+              className="flex items-center gap-2 bg-zinc-900/80 border border-white/20 hover:border-white text-white px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold shadow-xl transition-all backdrop-blur-md z-50 relative"  
             >  
               <Server className="w-4 h-4 text-white" />  
               <span className="hidden sm:inline tracking-wide">{selectedServer.name}</span>  
               <span className="sm:hidden tracking-wide">{selectedServer.id.toUpperCase()}</span>  
-              <ChevronDown className="w-4 h-4 text-zinc-400" />  
+              <ChevronDown className={`w-4 h-4 text-zinc-400 transition-transform ${showServerMenu ? 'rotate-180' : ''}`} />  
             </button>  
 
+            {/* FIX: Dropdown Menu rendering correctly and handling clicks */}
             {showServerMenu && (  
-              <div className="absolute right-0 mt-3 w-64 bg-zinc-900/95 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl z-50 p-2 space-y-1 max-h-80 overflow-y-auto">  
-                <div className="text-[10px] font-black uppercase text-zinc-500 px-3 py-2 tracking-wider">  
-                  Select Streaming Server  
+              <>
+                {/* Invisible overlay to close menu when clicking outside */}
+                <div 
+                  className="fixed inset-0 z-40" 
+                  onClick={() => setShowServerMenu(false)} 
+                />
+                
+                <div className="absolute right-0 mt-3 w-64 bg-zinc-900/95 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl z-50 p-2 space-y-1 max-h-80 overflow-y-auto">  
+                  <div className="text-[10px] font-black uppercase text-zinc-500 px-3 py-2 tracking-wider">  
+                    Select Streaming Server  
+                  </div>  
+                  {STREAM_SERVERS.map((server) => {  
+                    const isSelected = server.id === selectedServer.id;  
+                    return (  
+                      <button  
+                        key={server.id}  
+                        onClick={() => {  
+                          setSelectedServer(server);  
+                          setShowServerMenu(false);  
+                        }}  
+                        className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-left transition-all ${  
+                          isSelected  
+                            ? 'bg-white text-black shadow-lg font-black'  
+                            : 'text-zinc-300 hover:bg-zinc-800 hover:text-white'  
+                        }`}  
+                      >  
+                        <div className="flex items-center gap-2.5">  
+                          <span className="tracking-wide">{server.name}</span>  
+                          {server.badge && (  
+                            <span className="text-[9px] bg-black/50 px-1.5 py-0.5 rounded border border-white/10 font-black text-white uppercase">  
+                              {server.badge}  
+                            </span>  
+                          )}  
+                        </div>  
+                        {isSelected && <Check className="w-4 h-4 text-black" />}  
+                      </button>  
+                    );  
+                  })}  
                 </div>  
-                {STREAM_SERVERS.map((server) => {  
-                  const isSelected = server.id === selectedServer.id;  
-                  return (  
-                    <button  
-                      key={server.id}  
-                      onClick={() => {  
-                        setSelectedServer(server);  
-                        setShowServerMenu(false);  
-                      }}  
-                      className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-left transition-all ${  
-                        isSelected  
-                          ? 'bg-white text-black shadow-lg font-black'  
-                          : 'text-zinc-300 hover:bg-zinc-800 hover:text-white'  
-                      }`}  
-                    >  
-                      <div className="flex items-center gap-2.5">  
-                        <span className="tracking-wide">{server.name}</span>  
-                        {server.badge && (  
-                          <span className="text-[9px] bg-black/50 px-1.5 py-0.5 rounded border border-white/10 font-black text-white uppercase">  
-                            {server.badge}  
-                          </span>  
-                        )}  
-                      </div>  
-                      {isSelected && <Check className="w-4 h-4 text-black" />}  
-                    </button>  
-                  );  
-                })}  
-              </div>  
+              </>
             )}  
           </div>  
         </div>  
       </div>  
 
-      {/* Video Player Frame Container - NO SANDBOX */}  
+      {/* Video Player Frame Container */}  
       <div ref={containerRef} className="relative flex-1 w-full bg-black flex items-center justify-center overflow-hidden">  
+        {/* FIX: Added a key attribute tied to the server, season, and episode. 
+            This forces React to nuke the old iframe and build a fresh one, stopping servers from breaking on change */}
         <iframe  
+          key={`${selectedServer.id}-${season}-${episode}`}
           src={currentEmbedUrl}  
           title={title}  
           className="w-full h-full border-0 absolute inset-0"  
@@ -374,11 +333,10 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({
       </div>  
 
       {/* Bottom TV Season / Episode Picker & Server Info Bar */}  
-      <div className="w-full px-4 sm:px-8 py-4 bg-gradient-to-t from-black via-black/80 to-transparent flex flex-wrap items-center justify-between gap-3 z-30 pointer-events-none transition-all duration-300 opacity-100 hover:opacity-100">  
+      <div className="w-full px-4 sm:px-8 py-4 bg-gradient-to-t from-black via-black/80 to-transparent flex flex-wrap items-center justify-between gap-3 z-30 pointer-events-none transition-all duration-300">  
         <div className="flex items-center gap-3 pointer-events-auto">  
           {mediaType === 'tv' && (  
             <>  
-              {/* Season Select */}  
               <div className="flex items-center gap-2 bg-zinc-900/80 backdrop-blur-md border border-white/10 rounded-xl pl-3 pr-1 py-1 shadow-lg">  
                 <span className="text-[10px] sm:text-xs text-zinc-400 font-bold uppercase tracking-wider">Season</span>  
                 <select  
@@ -397,7 +355,6 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({
                 </select>  
               </div>  
 
-              {/* Episode Select */}  
               <div className="flex items-center gap-2 bg-zinc-900/80 backdrop-blur-md border border-white/10 rounded-xl pl-3 pr-1 py-1 shadow-lg">  
                 <span className="text-[10px] sm:text-xs text-zinc-400 font-bold uppercase tracking-wider">Episode</span>  
                 <select  
@@ -413,7 +370,6 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({
                 </select>  
               </div>  
 
-              {/* Next Episode Button */}  
               <button  
                 onClick={handleNextEpisode}  
                 className="flex items-center gap-2 bg-white hover:bg-zinc-200 text-black text-[10px] sm:text-xs font-black uppercase tracking-wider px-4 py-2 sm:py-2.5 rounded-xl transition-all shadow-lg hover:scale-105"  
