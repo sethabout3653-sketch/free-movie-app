@@ -172,7 +172,7 @@ export const STREAMING_PROVIDERS: StreamingProvider[] = [
     id: 'tubi',
     name: 'Tubi',
     badgeColor: '#F35216',
-    logoSvg: 'https://upload.wikimedia.org/wikipedia/commons/8/8d/Tubi_logo.svg',
+    logoSvg: 'https://upload.wikimedia.org/wikipedia/commons/c/c5/Tubi_logo_2024_purple.svg',
     providerId: 73,
     invertOnDark: false,
   },
@@ -188,7 +188,7 @@ export const STREAMING_PROVIDERS: StreamingProvider[] = [
     id: 'mgm',
     name: 'MGM+',
     badgeColor: '#D3A354',
-    logoSvg: 'https://upload.wikimedia.org/wikipedia/commons/1/18/MGM%2B_logo_2023.svg',
+    logoSvg: 'https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/e5bcded6-f42a-4503-afd4-692db216e412/df2elgo-7f53d44f-4d9e-4847-823c-f5d5f27fdba5.png?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7InBhdGgiOiIvZi9lNWJjZGVkNi1mNDJhLTQ1MDMtYWZkNC02OTJkYjIxNmU0MTIvZGYyZWxnby03ZjUzZDQ0Zi00ZDllLTQ4NDctODIzYy1mNWQ1ZjI3ZmRiYTUucG5nIn1dXSwiYXVkIjpbInVybjpzZXJ2aWNlOmZpbGUuZG93bmxvYWQiXX0.Nan2MTO_RwyvVbojV_Gw36QOQKzXr4Pe4vyWBMdcDCY',
     providerId: 582,
     invertOnDark: false,
   }
