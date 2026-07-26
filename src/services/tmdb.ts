@@ -1,4 +1,3 @@
-
 import { StreamingProvider, ServerOption, MediaType } from '../types';
 
 export const TMDB_API_KEY = '74a6132d309245d487e3b93904335056';
@@ -403,4 +402,5 @@ export async function getCertification(id: number, type: MediaType): Promise<str
   const defaultRating = type === 'movie' ? 'PG-13' : 'TV-MA';
   certificationCache[cacheKey] = defaultRating;
   return defaultRating;
-}
+             }
+                                                          
