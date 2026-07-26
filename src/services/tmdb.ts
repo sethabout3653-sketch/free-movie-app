@@ -1,3 +1,4 @@
+
 import { StreamingProvider, ServerOption, MediaType } from '../types';
 
 export const TMDB_API_KEY = '74a6132d309245d487e3b93904335056';
@@ -197,6 +198,78 @@ export const STREAMING_PROVIDERS: StreamingProvider[] = [
 // Stream servers list
 export const STREAM_SERVERS: ServerOption[] = [
   {
+    id: 'embedsu',
+    name: 'Embed.su',
+    badge: 'Reliable',
+    quality: '1080p HD',
+    speed: 'Ultra Fast',
+    supportsTv: true,
+    getUrl: (id, type, s = 1, e = 1) =>
+      type === 'movie'
+        ? `https://embed.su/embed/movie/${id}`
+        : `https://embed.su/embed/tv/${id}/${s}/${e}`,
+  },
+  {
+    id: 'vidbinge',
+    name: 'VidBinge',
+    badge: 'Fast & Clean',
+    quality: '1080p HD',
+    speed: 'Ultra Fast',
+    supportsTv: true,
+    getUrl: (id, type, s = 1, e = 1) =>
+      type === 'movie'
+        ? `https://vidbinge.com/embed/movie/${id}`
+        : `https://vidbinge.com/embed/tv/${id}/${s}/${e}`,
+  },
+  {
+    id: 'smashystream',
+    name: 'SmashyStream',
+    badge: 'Multi-Source',
+    quality: '1080p / 720p',
+    speed: 'Fast',
+    supportsTv: true,
+    getUrl: (id, type, s = 1, e = 1) =>
+      type === 'movie'
+        ? `https://embed.smashystream.com/playere.php?tmdb=${id}`
+        : `https://embed.smashystream.com/playere.php?tmdb=${id}&season=${s}&episode=${e}`,
+  },
+  {
+    id: 'vid2',
+    name: 'Vid2',
+    badge: 'Popular',
+    quality: '1080p HD',
+    speed: 'Fast',
+    supportsTv: true,
+    getUrl: (id, type, s = 1, e = 1) =>
+      type === 'movie'
+        ? `https://vid2.gg/embed/movie/${id}`
+        : `https://vid2.gg/embed/tv/${id}/${s}/${e}`,
+  },
+  {
+    id: 'vidplays',
+    name: 'VidPlays',
+    badge: 'Popular',
+    quality: '1080p HD',
+    speed: 'Fast',
+    supportsTv: true,
+    getUrl: (id, type, s = 1, e = 1) =>
+      type === 'movie'
+        ? `https://vidsrc.to/embed/movie/${id}`
+        : `https://vidsrc.to/embed/tv/${id}/${s}/${e}`,
+  },
+  {
+    id: 'autoembed',
+    name: 'AutoEmbed',
+    badge: 'Multi-Source',
+    quality: '1080p HD',
+    speed: 'Fast',
+    supportsTv: true,
+    getUrl: (id, type, s = 1, e = 1) =>
+      type === 'movie'
+        ? `https://player.autoembed.cc/embed/movie/${id}`
+        : `https://player.autoembed.cc/embed/tv/${id}/${s}/${e}`,
+  },
+  {
     id: '2embed',
     name: '2Embed',
     badge: 'Reliable',
@@ -207,18 +280,6 @@ export const STREAM_SERVERS: ServerOption[] = [
       type === 'movie'
         ? `https://www.2embed.cc/embed/${id}`
         : `https://www.2embed.cc/embedtv/${id}&s=${s}&e=${e}`,
-  },
-  {
-    id: 'superembed',
-    name: 'SuperEmbed',
-    badge: 'Multi-Source',
-    quality: '1080p HD',
-    speed: 'Ultra Fast',
-    supportsTv: true,
-    getUrl: (id, type, s = 1, e = 1) =>
-      type === 'movie'
-        ? `https://multiembed.mov/?video_id=${id}&tmdb=1`
-        : `https://multiembed.mov/?video_id=${id}&tmdb=1&s=${s}&e=${e}`,
   },
   {
     id: 'vidlink',
