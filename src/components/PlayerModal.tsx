@@ -11,7 +11,6 @@ import {
   Film,
   Play,
   Pause,
-  AlertCircle,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { MediaItem, MediaType, ServerOption } from "../types";
@@ -527,7 +526,7 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({
             className="w-full h-full border-0 absolute inset-0"
             allow="autoplay; fullscreen; encrypted-media; picture-in-picture; accelerometer; gyroscope; clipboard-write; web-share"
             allowFullScreen
-            sandbox="allow-scripts allow-same-origin allow-presentation allow-fullscreen"
+            sandbox="allow-scripts allow-same-origin allow-presentation"
             referrerPolicy="no-referrer"
           />
         </div>
@@ -565,6 +564,7 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({
 
             {mediaType === "tv" && (
               <>
-                <div className="flex items-center gap-2 bg-zinc-900/80 backdrop-blur-md border border-white/10 rounded-xl pl-3 pr-1 py-1 shadow-lg">
+                <div className="flex items-center gap-2 bg-zinc-900/80 backdrop-blur-md border border-white/10 rounded-xl pl-3 pr-1 py-1 shadow-lg text-white">
                   <span className="text-[10px] sm:text-xs text-zinc-400 font-bold uppercase tracking-wider">
-           
+                    S:
+         
