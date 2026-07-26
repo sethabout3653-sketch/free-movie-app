@@ -74,6 +74,9 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({
   );
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
 
+  // Invisible Click-Shield state to intercept initial ad/redirect overlays
+  const [shieldActive, setShieldActive] = useState<boolean>(true);
+
   const containerRef = useRef<HTMLDivElement>(null);
   const saveTimerRef = useRef<number | null>(null);
 
@@ -84,6 +87,11 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({
   const currentEmbedUrl = useMemo(() => {
     return selectedServer.getUrl(item.id, mediaType, season, episode);
   }, [selectedServer, item.id, mediaType, season, episode]);
+
+  // Reset the shield whenever stream or episode changes
+  useEffect(() => {
+    setShieldActive(true);
+  }, [selectedServer.id, item.id, season, episode]);
 
   useEffect(() => {
     let cancelled = false;
@@ -417,6 +425,7 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({
         transition={{ duration: 0.25 }}
         className="fixed inset-0 z-50 bg-black/95 backdrop-blur-3xl flex flex-col justify-between"
       >
+        {/* TOP HEADER CONTROLS */}
         <div className="w-full px-4 sm:px-8 py-4 sm:py-5 bg-gradient-to-b from-black/90 via-black/50 to-transparent flex items-center justify-between z-30 pointer-events-none">
           <div className="flex items-center gap-4 pointer-events-auto">
             <button
@@ -516,21 +525,37 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({
           </div>
         </div>
 
+        {/* VIDEO PLAYER CONTAINER */}
         <div
           ref={containerRef}
           className="relative flex-1 w-full bg-black flex items-center justify-center overflow-hidden"
         >
+          {/* CLICK SHIELD OVERLAY: Traps and destroys hidden ad-click redirects */}
+          {shieldActive && (
+            <div
+              onClick={(e) => {
+                e.stopPropagation();
+                setShieldActive(false);
+              }}
+              className="absolute inset-0 z-20 bg-transparent cursor-pointer"
+              title="Click once to activate video player"
+            />
+          )}
+
           <iframe
+            key={`${selectedServer.id}-${season}-${episode}`}
             src={currentEmbedUrl}
             title={title}
-            className="w-full h-full border-0 absolute inset-0"
+            className="w-full h-full border-0 absolute inset-0 z-10"
             allow="autoplay; fullscreen; encrypted-media; picture-in-picture; accelerometer; gyroscope; clipboard-write; web-share"
             allowFullScreen
+            /* STRICT SANDBOX: Completely blocks popups, popunders, and top-level site redirects */
             sandbox="allow-scripts allow-same-origin allow-presentation"
             referrerPolicy="no-referrer"
           />
         </div>
 
+        {/* BOTTOM BAR CONTROLS */}
         <div className="w-full px-4 sm:px-8 py-4 bg-gradient-to-t from-black via-black/80 to-transparent flex flex-wrap items-center justify-between gap-3 z-30 pointer-events-none">
           <div className="flex items-center gap-3 pointer-events-auto">
             <div className="flex items-center gap-2 bg-zinc-900/80 backdrop-blur-md border border-white/10 rounded-xl px-3 py-2 shadow-lg text-white">
@@ -546,25 +571,4 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({
 
             <div className="flex items-center gap-2 bg-zinc-900/80 backdrop-blur-md border border-white/10 rounded-xl px-3 py-2 shadow-lg text-white">
               <Clock className="w-4 h-4" />
-              <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider">
-                {progressText}
-              </span>
-            </div>
-
-            <div className="flex items-center gap-2 bg-zinc-900/80 backdrop-blur-md border border-white/10 rounded-xl px-3 py-2 shadow-lg text-white">
-              {isPlaying ? (
-                <Pause className="w-4 h-4" />
-              ) : (
-                <Play className="w-4 h-4" />
-              )}
-              <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider">
-                {isPlaying ? "Playing" : "Paused"}
-              </span>
-            </div>
-
-            {mediaType === "tv" && (
-              <>
-                <div className="flex items-center gap-2 bg-zinc-900/80 backdrop-blur-md border border-white/10 rounded-xl pl-3 pr-1 py-1 shadow-lg text-white">
-                  <span className="text-[10px] sm:text-xs text-zinc-400 font-bold uppercase tracking-wider">
-                    S:
          
